@@ -285,7 +285,13 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
     return null;
   }
 
-  const artifacts = Array.isArray(pipelineStage.requiredArtifacts) ? pipelineStage.requiredArtifacts : [];
+  const artifacts = Array.isArray(pipelineStage.artifacts)
+    ? pipelineStage.artifacts
+    : (pipelineStage.requiredArtifacts || []).map((artifact) => ({
+        name: artifact,
+        status: 'needs-confirmation',
+        statusLabel: '需确认',
+      }));
 
   return (
     <section
@@ -311,7 +317,10 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
         <span>必要产物</span>
         <ul>
           {artifacts.map((artifact) => (
-            <li key={artifact}>{artifact}</li>
+            <li className={artifact.status || 'needs-confirmation'} key={artifact.name}>
+              <strong>{artifact.name}</strong>
+              <small>{artifact.statusLabel || '待确认'}</small>
+            </li>
           ))}
         </ul>
       </article>

@@ -107,6 +107,39 @@ describe('business pipeline metadata', () => {
     });
   });
 
+  test('tracks required artifact readiness for each pipeline stage', () => {
+    const view = createProjectPipelineView({
+      artifacts: {
+        architecture: '# 设计产物\n\n页面流程已生成。\n\n交互说明已补齐。',
+      },
+      currentStageId: 'architecture',
+      stageConfirmations: {
+        architecture: {
+          missingItems: [{ id: 'wireframe', title: '线框图或截图' }],
+        },
+      },
+      stages: createWorkflowStages('architecture').map((stage) =>
+        stage.id === 'development' ? { ...stage, status: 'queued' } : stage,
+      ),
+    });
+
+    expect(view.activeStage.artifacts).toEqual([
+      { name: '页面流程', status: 'generated', statusLabel: '已生成' },
+      { name: '交互说明', status: 'generated', statusLabel: '已生成' },
+      { name: '线框图或截图', status: 'missing', statusLabel: '缺失' },
+    ]);
+    expect(view.stages.find((stage) => stage.id === 'ops-requirements').artifacts[0]).toMatchObject({
+      name: '运行环境',
+      status: 'approved',
+      statusLabel: '已确认',
+    });
+    expect(view.stages.find((stage) => stage.id === 'implementation-integration').artifacts[0]).toMatchObject({
+      name: '变更包',
+      status: 'waiting',
+      statusLabel: '等待前置',
+    });
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(

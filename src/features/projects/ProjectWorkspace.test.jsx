@@ -152,6 +152,14 @@ describe('ProjectWorkspace', () => {
       currentOwner: '技术负责人',
       stageProgress: 4,
       totalStages: 10,
+      artifacts: {
+        architecture: '# 设计产物\n\n页面流程已生成。\n\n交互说明已补齐。',
+      },
+      stageConfirmations: {
+        architecture: {
+          missingItems: [{ id: 'wireframe', title: '线框图或截图' }],
+        },
+      },
       stages: createPipelineWorkflowStages('architecture'),
     };
 
@@ -176,7 +184,10 @@ describe('ProjectWorkspace', () => {
       within(workbench).getByText('下一步动作：补齐页面流程等必要产物，并完成产品 / 设计确认。'),
     ).toBeInTheDocument();
     expect(within(workbench).getByText('页面流程')).toBeInTheDocument();
+    expect(within(workbench).getAllByText('已生成')).toHaveLength(2);
     expect(within(workbench).getByText('交互说明')).toBeInTheDocument();
+    expect(within(workbench).getByText('线框图或截图')).toBeInTheDocument();
+    expect(within(workbench).getByText('缺失')).toBeInTheDocument();
     expect(within(workbench).getByText('人工闸口')).toBeInTheDocument();
     expect(
       within(workbench).getByText('产品或设计确认核心用户路径和关键页面交互。'),

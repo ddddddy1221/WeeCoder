@@ -2855,13 +2855,63 @@ textarea:focus-visible,
 }
 
 .pipeline-stage-workbench-artifacts li {
+  align-items: center;
   background: #eef9f7;
   border: 1px solid #c6e7e2;
   border-radius: 999px;
   color: var(--console-text);
+  display: inline-flex;
   font-size: 11px;
   font-weight: 900;
+  gap: 6px;
   padding: 4px 7px;
+}
+
+.pipeline-stage-workbench-artifacts li.missing {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.pipeline-stage-workbench-artifacts li.waiting {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.pipeline-stage-workbench-artifacts li.needs-confirmation {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.pipeline-stage-workbench-artifacts li.approved {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+
+.pipeline-stage-workbench-artifacts li strong {
+  color: var(--console-text);
+  font-size: 11px;
+}
+
+.pipeline-stage-workbench-artifacts li small {
+  background: #ffffff;
+  border-radius: 999px;
+  color: var(--console-text-secondary);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 5px;
+}
+
+.pipeline-stage-workbench-artifacts li.missing small {
+  color: #be123c;
+}
+
+.pipeline-stage-workbench-artifacts li.generated small,
+.pipeline-stage-workbench-artifacts li.approved small {
+  color: #047857;
+}
+
+.pipeline-stage-workbench-artifacts li.needs-confirmation small {
+  color: #92400e;
 }
 
 .pipeline-stage-workbench > button {

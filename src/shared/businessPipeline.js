@@ -228,10 +228,10 @@ export function createProjectPipelineView(project = {}, { selectedStageId = '' }
   const workflowStageMap = new Map(workflowStages.map((stage) => [stage.id, stage]));
   const activeWorkflowStageId = selectedStageId || project.currentStageId || '';
   const stages = PIPELINE_STAGE_DEFINITIONS.map((stage) =>
-    createPipelineStageCard(stage, workflowStageMap, activeWorkflowStageId),
+    createPipelineStageCard(stage, workflowStageMap, activeWorkflowStageId, project),
   );
   const conditionalLoops = PIPELINE_CONDITIONAL_LOOPS.map((stage) =>
-    createPipelineStageCard(stage, workflowStageMap, activeWorkflowStageId),
+    createPipelineStageCard(stage, workflowStageMap, activeWorkflowStageId, project),
   );
   const bands = PIPELINE_BANDS.map((band) => {
     const bandStages = stages.filter((stage) => stage.band === band.id);
@@ -282,7 +282,7 @@ export function createProjectPipelineView(project = {}, { selectedStageId = '' }
   };
 }
 
-function createPipelineStageCard(definition, workflowStageMap, activeWorkflowStageId) {
+function createPipelineStageCard(definition, workflowStageMap, activeWorkflowStageId, project = {}) {
   const workflowStages = definition.workflowStageIds
     .map((stageId) => workflowStageMap.get(stageId))
     .filter(Boolean);
@@ -293,6 +293,7 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
   return {
     ...definition,
     artifactCount: requiredArtifacts.length,
+    artifacts: createPipelineArtifactStatuses(definition, project, workflowStatus),
     blockers,
     humanGateCount: definition.humanGate ? 1 : 0,
     nextAction: pipelineStageNextAction({
@@ -305,6 +306,66 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
     statusLabel: pipelineStatusLabel(workflowStatus),
     workflowStageIds: [...definition.workflowStageIds],
   };
+}
+
+function createPipelineArtifactStatuses(definition, project, stageStatus) {
+  const requiredArtifacts = normalizeList(definition.requiredArtifacts);
+  const artifactText = definition.workflowStageIds
+    .map((stageId) => project.artifacts?.[stageId] || '')
+    .join('\n')
+    .toLowerCase();
+  const missingText = definition.workflowStageIds
+    .flatMap((stageId) => normalizeList(project.stageConfirmations?.[stageId]?.missingItems))
+    .map((item) => `${item.id || ''} ${item.title || ''} ${item.label || ''}`.toLowerCase())
+    .join('\n');
+
+  return requiredArtifacts.map((artifact) => {
+    const normalizedArtifact = artifact.toLowerCase();
+    const status = resolveArtifactStatus({
+      artifactText,
+      missingText,
+      normalizedArtifact,
+      stageStatus,
+    });
+
+    return {
+      name: artifact,
+      status,
+      statusLabel: artifactStatusLabel(status),
+    };
+  });
+}
+
+function resolveArtifactStatus({ artifactText, missingText, normalizedArtifact, stageStatus }) {
+  if (missingText.includes(normalizedArtifact)) {
+    return 'missing';
+  }
+
+  if (artifactText.includes(normalizedArtifact)) {
+    return 'generated';
+  }
+
+  if (stageStatus === 'approved') {
+    return 'approved';
+  }
+
+  if (stageStatus === 'queued') {
+    return 'waiting';
+  }
+
+  return 'needs-confirmation';
+}
+
+function artifactStatusLabel(status) {
+  const labels = {
+    approved: '已确认',
+    generated: '已生成',
+    missing: '缺失',
+    'needs-confirmation': '需确认',
+    waiting: '等待前置',
+  };
+
+  return labels[status] || '待确认';
 }
 
 function resolvePipelineStatus(workflowStageIds, workflowStages, activeWorkflowStageId) {
