@@ -97,6 +97,43 @@ describe('ProjectWorkspace', () => {
     expect(within(guidance).getByText('线框图或截图')).toBeInTheDocument();
   });
 
+  test('summarizes the active business band before expanding the full pipeline', () => {
+    const project = {
+      id: 'band-summary-demo',
+      name: '业务带摘要项目',
+      summary: '验证当前业务带能给出阶段范围和推荐动作。',
+      health: 'on-track',
+      currentStageId: 'architecture',
+      currentStageName: '架构与数据设计',
+      currentOwner: '技术负责人',
+      stageProgress: 4,
+      totalStages: 10,
+      stages: createPipelineWorkflowStages('architecture'),
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="architecture"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const bandSummary = screen.getByLabelText('当前业务带摘要');
+    expect(within(bandSummary).getByText('当前业务带：设计带')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('3 个阶段 · 0 个已完成')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('UI / 交互设计')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('ERD / 技术设计')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('运维需求')).toBeInTheDocument();
+    expect(
+      within(bandSummary).getByText('先补齐当前业务带的必要产物，再推动下一阶段流转。'),
+    ).toBeInTheDocument();
+  });
+
   test('uses Chinese product terms in requirement navigation and summaries', () => {
     const project = {
       id: 'copy-demo',

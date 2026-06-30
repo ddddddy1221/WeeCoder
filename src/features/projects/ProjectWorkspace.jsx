@@ -195,6 +195,7 @@ function ProjectWorkspaceFocusPanel({
           </div>
         ) : null}
       </details>
+      <ActivePipelineBandSummary pipelineView={pipelineView} />
       <ProjectPipelineTrack onStageChange={onStageChange} pipelineView={pipelineView} />
       <details className="project-workspace-stage-track" aria-label="阶段轨道">
         <summary>
@@ -232,6 +233,29 @@ function ProjectWorkspaceFocusPanel({
           ))}
         </div>
       </details>
+    </section>
+  );
+}
+
+function ActivePipelineBandSummary({ pipelineView }) {
+  const band = pipelineView?.activeBand;
+  if (!band) {
+    return null;
+  }
+
+  return (
+    <section className="active-pipeline-band-summary" aria-label="当前业务带摘要">
+      <div>
+        <p className="eyebrow">业务带工作区</p>
+        <strong>{`当前业务带：${band.label}`}</strong>
+        <small>{`${band.stages.length} 个阶段 · ${band.completeCount} 个已完成`}</small>
+      </div>
+      <ul>
+        {band.stages.map((stage) => (
+          <li key={stage.id}>{stage.name}</li>
+        ))}
+      </ul>
+      <p>先补齐当前业务带的必要产物，再推动下一阶段流转。</p>
     </section>
   );
 }
