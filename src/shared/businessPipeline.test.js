@@ -177,6 +177,50 @@ describe('business pipeline metadata', () => {
     });
   });
 
+  test('summarizes gate readiness from artifact states', () => {
+    const blockedView = createProjectPipelineView({
+      artifacts: {
+        architecture: '# 设计产物\n\n页面流程已生成。',
+      },
+      currentStageId: 'architecture',
+      stageConfirmations: {
+        architecture: {
+          missingItems: [{ id: 'wireframe', title: '线框图或截图' }],
+        },
+      },
+      stages: createWorkflowStages('architecture'),
+    });
+    const staleView = createProjectPipelineView({
+      artifacts: {
+        development: '# 开发变更包\n\n变更包已生成。',
+      },
+      currentStageId: 'development',
+      prdVersion: { label: 'v1', status: 'stale' },
+      stages: createWorkflowStages('development').map((stage) =>
+        stage.id === 'acceptance' ? { ...stage, status: 'queued' } : stage,
+      ),
+    });
+
+    expect(blockedView.activeStage.gateSummary).toMatchObject({
+      label: '闸口需处理',
+      missingCount: 1,
+      staleCount: 0,
+      status: 'blocked',
+    });
+    expect(blockedView.activeStage.gateSummary.message).toBe('缺失 1 个必要产物。');
+    expect(staleView.activeStage.gateSummary).toMatchObject({
+      label: '闸口需重检',
+      missingCount: 0,
+      staleCount: 4,
+      status: 'stale',
+    });
+    expect(staleView.stages.find((stage) => stage.id === 'deployment').gateSummary).toMatchObject({
+      label: '等待前置',
+      status: 'waiting',
+      waitingCount: 4,
+    });
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(

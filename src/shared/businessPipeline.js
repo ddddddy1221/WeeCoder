@@ -289,12 +289,14 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
   const workflowStatus = resolvePipelineStatus(definition.workflowStageIds, workflowStages, activeWorkflowStageId);
   const requiredArtifacts = normalizeList(definition.requiredArtifacts);
   const blockers = workflowStages.flatMap((stage) => normalizeList(stage.blockers));
+  const artifacts = createPipelineArtifactStatuses(definition, project, workflowStatus);
 
   return {
     ...definition,
     artifactCount: requiredArtifacts.length,
-    artifacts: createPipelineArtifactStatuses(definition, project, workflowStatus),
+    artifacts,
     blockers,
+    gateSummary: createPipelineGateSummary(artifacts),
     humanGateCount: definition.humanGate ? 1 : 0,
     nextAction: pipelineStageNextAction({
       blockers,
@@ -305,6 +307,65 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
     status: workflowStatus,
     statusLabel: pipelineStatusLabel(workflowStatus),
     workflowStageIds: [...definition.workflowStageIds],
+  };
+}
+
+function createPipelineGateSummary(artifacts = []) {
+  const counts = artifacts.reduce(
+    (summary, artifact) => ({
+      ...summary,
+      [`${artifact.status}Count`]: (summary[`${artifact.status}Count`] || 0) + 1,
+    }),
+    {
+      approvedCount: 0,
+      generatedCount: 0,
+      missingCount: 0,
+      needsConfirmationCount: 0,
+      staleCount: 0,
+      waitingCount: 0,
+    },
+  );
+
+  if (counts.staleCount) {
+    return {
+      ...counts,
+      label: '闸口需重检',
+      message: `过期 ${counts.staleCount} 个必要产物。`,
+      status: 'stale',
+    };
+  }
+
+  if (counts.missingCount || counts.needsConfirmationCount) {
+    const parts = [];
+    if (counts.missingCount) {
+      parts.push(`缺失 ${counts.missingCount} 个必要产物`);
+    }
+    if (counts.needsConfirmationCount) {
+      parts.push(`需确认 ${counts.needsConfirmationCount} 个必要产物`);
+    }
+
+    return {
+      ...counts,
+      label: '闸口需处理',
+      message: `${parts.join('，')}。`,
+      status: 'blocked',
+    };
+  }
+
+  if (counts.waitingCount) {
+    return {
+      ...counts,
+      label: '等待前置',
+      message: `等待 ${counts.waitingCount} 个必要产物启动。`,
+      status: 'waiting',
+    };
+  }
+
+  return {
+    ...counts,
+    label: '闸口可通过',
+    message: '必要产物已满足当前闸口。',
+    status: 'ready',
   };
 }
 

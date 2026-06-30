@@ -309,6 +309,11 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
         <p>{`下一步动作：${pipelineStage.nextAction}`}</p>
         <small>{detail?.statusLabel ? `当前状态：${detail.statusLabel}` : pipelineStage.statusLabel}</small>
       </article>
+      <article className={`pipeline-stage-workbench-gate ${pipelineStage.gateSummary?.status || 'ready'}`}>
+        <span>闸口状态</span>
+        <strong>{pipelineStage.gateSummary?.label || '闸口可通过'}</strong>
+        <p>{pipelineStage.gateSummary?.message || '必要产物已满足当前闸口。'}</p>
+      </article>
       <article>
         <span>人工闸口</span>
         <p>{pipelineStage.humanGate || '当前阶段暂无人工闸口。'}</p>
