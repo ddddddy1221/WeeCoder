@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle, Check, Circle } from 'lucide-react';
+import { createProjectPipelineView } from '../../shared/businessPipeline.js';
 
 const PROJECT_SUMMARY_PREVIEW_LENGTH = 37;
 
@@ -47,6 +48,9 @@ export function ProjectWorkspace({
     stageIndex,
     totalStages,
   );
+  const pipelineView = createProjectPipelineView(project, {
+    selectedStageId: selectedStageId || project.currentStageId,
+  });
   const focusSummary = createDeliveryFocusSummary({
     deliveryProgress,
     project,
@@ -76,6 +80,7 @@ export function ProjectWorkspace({
         isExpanded={isStageDetailExpanded}
         onToggle={() => setIsStageDetailExpanded((expanded) => !expanded)}
         onStageChange={onStageChange}
+        pipelineView={pipelineView}
         project={project}
         selectedStageId={selectedStageId}
         stages={stages}
@@ -111,6 +116,7 @@ function ProjectWorkspaceFocusPanel({
   isExpanded,
   onToggle,
   onStageChange,
+  pipelineView,
   project,
   selectedStageId,
   stages,
@@ -146,6 +152,7 @@ function ProjectWorkspaceFocusPanel({
           <span key={metric}>{metric}</span>
         ))}
       </div>
+      <ProjectPipelineBandStrip onStageChange={onStageChange} pipelineView={pipelineView} />
       <article className="project-workspace-focus-stage" aria-label="当前阶段摘要">
         <span>当前阶段</span>
         <strong>{detail.stageName}</strong>
@@ -186,6 +193,7 @@ function ProjectWorkspaceFocusPanel({
           </div>
         ) : null}
       </details>
+      <ProjectPipelineTrack onStageChange={onStageChange} pipelineView={pipelineView} />
       <details className="project-workspace-stage-track" aria-label="阶段轨道">
         <summary>
           <span>
@@ -223,6 +231,80 @@ function ProjectWorkspaceFocusPanel({
         </div>
       </details>
     </section>
+  );
+}
+
+function ProjectPipelineBandStrip({ onStageChange, pipelineView }) {
+  if (!pipelineView?.bands?.length) {
+    return null;
+  }
+
+  return (
+    <div className="project-workspace-pipeline-band-strip" aria-label="业务带进度">
+      {pipelineView.bands.map((band) => {
+        const firstStage = band.stages[0];
+        return (
+          <button
+            aria-current={band.id === pipelineView.activeBand?.id ? 'step' : undefined}
+            className={`pipeline-band-chip ${band.status || 'queued'} ${
+              band.id === pipelineView.activeBand?.id ? 'selected' : ''
+            }`}
+            key={band.id}
+            onClick={() => onStageChange?.(firstStage?.workflowStageIds?.[0])}
+            type="button"
+          >
+            <span>{band.label}</span>
+            <strong>{band.stages.map((stage) => stage.name).join(' / ')}</strong>
+            <small>{`${band.completeCount}/${band.stages.length} 已完成`}</small>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProjectPipelineTrack({ onStageChange, pipelineView }) {
+  if (!pipelineView?.bands?.length) {
+    return null;
+  }
+
+  return (
+    <details className="project-workspace-pipeline-track" aria-label="业务流转 Pipeline">
+      <summary>
+        <span>
+          <strong>业务流转 Pipeline</strong>
+          <small>{`当前业务带：${pipelineView.summary.activeBandLabel}`}</small>
+        </span>
+        <em>{`${pipelineView.summary.stageCount} 个主阶段`}</em>
+      </summary>
+      <div className="project-workspace-pipeline-grid" aria-label="完整业务流转阶段">
+        {pipelineView.bands.map((band) => (
+          <section className={`pipeline-band-card ${band.status || 'queued'}`} key={band.id}>
+            <header>
+              <span>{band.label}</span>
+              <small>{band.description}</small>
+            </header>
+            <div>
+              {band.visibleStages.map((stage) => (
+                <button
+                  aria-current={stage.id === pipelineView.activeStage?.id ? 'step' : undefined}
+                  className={`pipeline-stage-card ${stage.status || 'queued'} ${
+                    stage.id === pipelineView.activeStage?.id ? 'selected' : ''
+                  }`}
+                  key={stage.id}
+                  onClick={() => onStageChange?.(stage.workflowStageIds[0])}
+                  type="button"
+                >
+                  <span>{String(stage.order || '回流').padStart(2, '0')}</span>
+                  <strong>{stage.name}</strong>
+                  <small>{`${stage.ownerRole} · ${stage.operatingMode}`}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </details>
   );
 }
 

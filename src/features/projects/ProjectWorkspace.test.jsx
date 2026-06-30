@@ -3,6 +3,60 @@ import { describe, expect, test, vi } from 'vitest';
 import { ProjectWorkspace } from './ProjectWorkspace.jsx';
 
 describe('ProjectWorkspace', () => {
+  test('shows the latest business pipeline bands and grouped delivery stages', () => {
+    const onStageChange = vi.fn();
+    const project = {
+      id: 'pipeline-demo',
+      name: '业务流转演示项目',
+      summary: '验证最新业务流转 Pipeline 可以在项目详情页被快速理解。',
+      health: 'on-track',
+      currentStageId: 'architecture',
+      currentStageName: '架构与数据设计',
+      currentOwner: '技术负责人',
+      stageProgress: 4,
+      totalStages: 10,
+      stages: createPipelineWorkflowStages('architecture'),
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={onStageChange}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="architecture"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const bandStrip = screen.getByLabelText('业务带进度');
+    expect(within(bandStrip).getByText('需求带')).toBeInTheDocument();
+    expect(within(bandStrip).getByText('设计带')).toBeInTheDocument();
+    expect(within(bandStrip).getByText('构建带')).toBeInTheDocument();
+    expect(within(bandStrip).getByText('验证带')).toBeInTheDocument();
+    expect(within(bandStrip).getByText('发布带')).toBeInTheDocument();
+    expect(within(bandStrip).getByRole('button', { name: /设计带/ })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+
+    const pipeline = screen.getByLabelText('业务流转 Pipeline');
+    expect(within(pipeline).getByText('当前业务带：设计带')).toBeInTheDocument();
+    expect(within(pipeline).getByText('13 个主阶段')).toBeInTheDocument();
+    fireEvent.click(within(pipeline).getByText('业务流转 Pipeline'));
+
+    const fullPipeline = within(pipeline).getByLabelText('完整业务流转阶段');
+    expect(within(fullPipeline).getByText('UI / 交互设计')).toBeVisible();
+    expect(within(fullPipeline).getByText('ERD / 技术设计')).toBeVisible();
+    expect(within(fullPipeline).getByText('黑盒测试')).toBeVisible();
+    expect(within(fullPipeline).getByText('白盒测试 / 安全 / 质量审查')).toBeVisible();
+    expect(within(fullPipeline).getByText('最终验收')).toBeVisible();
+
+    fireEvent.click(within(bandStrip).getByRole('button', { name: /验证带/ }));
+    expect(onStageChange).toHaveBeenCalledWith('qa');
+  });
+
   test('uses Chinese product terms in requirement navigation and summaries', () => {
     const project = {
       id: 'copy-demo',
@@ -436,3 +490,25 @@ describe('ProjectWorkspace', () => {
     expect(within(summaryDetails).getByText(longSummary)).toBeVisible();
   });
 });
+
+function createPipelineWorkflowStages(activeStageId) {
+  return [
+    ['intake', '项目入口', '负责人'],
+    ['pm-requirements', '项目经理需求', '项目经理'],
+    ['prd-approval', '需求文档审批', '负责人'],
+    ['architecture', '架构与数据设计', '技术负责人'],
+    ['ops-requirements', '运维需求', '运维'],
+    ['development', '自动开发', 'AI 开发'],
+    ['review', '代码、安全、性能审查', '技术负责人'],
+    ['qa', '测试', '测试'],
+    ['defect-loop', '缺陷回归', 'AI 开发 / 测试'],
+    ['acceptance', '最终验收', '负责人'],
+  ].map(([id, name, owner], index) => ({
+    id,
+    name,
+    owner,
+    status: id === activeStageId ? 'active' : index < 3 ? 'approved' : 'queued',
+    description: `${name}阶段说明`,
+    checklist: [`${name}检查项`],
+  }));
+}
