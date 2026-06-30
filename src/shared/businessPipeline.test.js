@@ -221,6 +221,56 @@ describe('business pipeline metadata', () => {
     });
   });
 
+  test('recommends flow actions from gate readiness', () => {
+    const blockedView = createProjectPipelineView({
+      artifacts: {
+        architecture: '# 设计产物\n\n页面流程已生成。',
+      },
+      currentStageId: 'architecture',
+      stageConfirmations: {
+        architecture: {
+          missingItems: [{ id: 'wireframe', title: '线框图或截图' }],
+        },
+      },
+      stages: createWorkflowStages('architecture'),
+    });
+    const staleView = createProjectPipelineView({
+      artifacts: {
+        development: '# 开发变更包\n\n变更包已生成。',
+      },
+      currentStageId: 'development',
+      prdVersion: { label: 'v1', status: 'stale' },
+      stages: createWorkflowStages('development').map((stage) =>
+        stage.id === 'acceptance' ? { ...stage, status: 'queued' } : stage,
+      ),
+    });
+
+    expect(blockedView.activeStage.flowActions).toEqual([
+      expect.objectContaining({
+        id: 'complete-artifact-wireframe',
+        label: '补齐线框图或截图',
+        type: 'manual',
+      }),
+    ]);
+    expect(staleView.activeStage.flowActions).toEqual([
+      expect.objectContaining({
+        id: 'regenerate-prd',
+        label: '重新生成需求文档',
+        type: 'system',
+      }),
+      expect.objectContaining({
+        id: 'regenerate-development-package',
+        label: '重新生成开发任务包',
+        type: 'system',
+      }),
+    ]);
+    expect(staleView.stages.find((stage) => stage.id === 'deployment').flowActions[0]).toMatchObject({
+      id: 'wait-prerequisite',
+      label: '等待前置阶段完成',
+      type: 'system',
+    });
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(

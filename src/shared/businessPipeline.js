@@ -290,13 +290,15 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
   const requiredArtifacts = normalizeList(definition.requiredArtifacts);
   const blockers = workflowStages.flatMap((stage) => normalizeList(stage.blockers));
   const artifacts = createPipelineArtifactStatuses(definition, project, workflowStatus);
+  const gateSummary = createPipelineGateSummary(artifacts);
 
   return {
     ...definition,
     artifactCount: requiredArtifacts.length,
     artifacts,
     blockers,
-    gateSummary: createPipelineGateSummary(artifacts),
+    flowActions: createPipelineFlowActions(definition, artifacts, gateSummary),
+    gateSummary,
     humanGateCount: definition.humanGate ? 1 : 0,
     nextAction: pipelineStageNextAction({
       blockers,
@@ -308,6 +310,142 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
     statusLabel: pipelineStatusLabel(workflowStatus),
     workflowStageIds: [...definition.workflowStageIds],
   };
+}
+
+function createPipelineFlowActions(definition, artifacts = [], gateSummary = {}) {
+  if (gateSummary.status === 'stale') {
+    return [
+      {
+        description: '需求版本已过期，先刷新需求文档基线。',
+        id: 'regenerate-prd',
+        label: '重新生成需求文档',
+        type: 'system',
+      },
+      {
+        description: `重新生成${definition.name}所需交付物。`,
+        id: downstreamRegenerationActionId(definition),
+        label: downstreamRegenerationActionLabel(definition),
+        type: 'system',
+      },
+    ];
+  }
+
+  const missingArtifacts = artifacts.filter((artifact) => artifact.status === 'missing');
+  const confirmationArtifacts = artifacts.filter((artifact) => artifact.status === 'needs-confirmation');
+  const blockedArtifacts = missingArtifacts.length ? missingArtifacts : confirmationArtifacts;
+  if (blockedArtifacts.length) {
+    return blockedArtifacts.slice(0, 2).map((artifact, index) => ({
+      description: `补齐${artifact.name}后再提交闸口确认。`,
+      id: `complete-artifact-${artifactActionId(artifact.name, index)}`,
+      label: `补齐${artifact.name}`,
+      type: 'manual',
+    }));
+  }
+
+  if (gateSummary.status === 'waiting') {
+    return [
+      {
+        description: gateSummary.message || '等待前置阶段完成后再启动。',
+        id: 'wait-prerequisite',
+        label: '等待前置阶段完成',
+        type: 'system',
+      },
+    ];
+  }
+
+  return [
+    {
+      description: '确认产物和人工闸口后推动下一阶段。',
+      id: 'submit-gate-confirmation',
+      label: '提交闸口确认',
+      type: 'manual',
+    },
+  ];
+}
+
+function artifactActionId(name, index = 0) {
+  const knownArtifacts = {
+    业务背景: 'business-background',
+    项目目标: 'project-goal',
+    负责人: 'owner',
+    优先级: 'priority',
+    结构化需求答案: 'structured-requirements',
+    缺失项清单: 'missing-items',
+    需求质检记录: 'requirement-quality-check',
+    需求文档版本: 'prd-version',
+    变更影响记录: 'change-impact',
+    审批意见: 'approval-opinion',
+    页面流程: 'page-flow',
+    交互说明: 'interaction-notes',
+    线框图或截图: 'wireframe',
+    ERD: 'erd',
+    接口契约: 'api-contract',
+    模块边界: 'module-boundary',
+    任务拆分: 'task-breakdown',
+    运行环境: 'runtime-environment',
+    环境变量: 'environment-variables',
+    密钥清单: 'secret-list',
+    网络和部署约束: 'network-deployment-constraints',
+    变更包: 'change-package',
+    提交记录: 'commit-log',
+    自测结果: 'self-test-result',
+    实现说明: 'implementation-notes',
+    功能用例: 'functional-cases',
+    边界用例: 'edge-cases',
+    回归用例: 'regression-cases',
+    验收指标: 'acceptance-metrics',
+    执行记录: 'execution-log',
+    缺陷: 'defects',
+    '截图 / 日志': 'screenshots-logs',
+    通过率: 'pass-rate',
+    代码审查报告: 'code-review-report',
+    安全问题: 'security-issues',
+    性能问题: 'performance-issues',
+    启停脚本: 'service-scripts',
+    部署说明: 'deployment-notes',
+    回滚说明: 'rollback-notes',
+    部署记录: 'deployment-record',
+    环境: 'environment',
+    版本: 'version',
+    操作人: 'operator',
+    验收包: 'acceptance-package',
+    签收结论: 'signoff-result',
+    遗留风险: 'residual-risks',
+  };
+
+  return knownArtifacts[name] || `artifact-${index + 1}`;
+}
+
+function downstreamRegenerationActionId(definition) {
+  if (definition.band === 'build') {
+    return 'regenerate-development-package';
+  }
+  if (definition.band === 'verification') {
+    return 'rerun-test-plan';
+  }
+  if (definition.band === 'design') {
+    return 'refresh-technical-design';
+  }
+  if (definition.band === 'release') {
+    return 'refresh-release-package';
+  }
+  return 'refresh-stage-package';
+}
+
+function downstreamRegenerationActionLabel(definition) {
+  if (definition.band === 'build') {
+    return '重新生成开发任务包';
+  }
+  if (definition.band === 'verification') {
+    return '重新生成测试用例';
+  }
+  if (definition.band === 'design') {
+    return '重新生成技术设计';
+  }
+  if (definition.band === 'release') {
+    return '重新生成发布包';
+  }
+  return '重新生成阶段产物';
 }
 
 function createPipelineGateSummary(artifacts = []) {

@@ -292,6 +292,7 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
         status: 'needs-confirmation',
         statusLabel: '需确认',
       }));
+  const flowActions = Array.isArray(pipelineStage.flowActions) ? pipelineStage.flowActions : [];
 
   return (
     <section
@@ -329,6 +330,18 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
           ))}
         </ul>
       </article>
+      {flowActions.length ? (
+        <article className="pipeline-stage-workbench-actions">
+          <span>建议动作</span>
+          <div>
+            {flowActions.map((action) => (
+              <button className={action.type || 'manual'} key={action.id} type="button">
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </article>
+      ) : null}
       <button
         aria-expanded={isExpanded}
         className="stage-detail-toggle secondary"

@@ -182,6 +182,8 @@ describe('ProjectWorkspace', () => {
     expect(within(workbench).getByText('工作模式：人工负责，后续 AI 辅助')).toBeInTheDocument();
     expect(within(workbench).getByText('闸口需处理')).toBeInTheDocument();
     expect(within(workbench).getByText('缺失 1 个必要产物。')).toBeInTheDocument();
+    expect(within(workbench).getByText('建议动作')).toBeInTheDocument();
+    expect(within(workbench).getByRole('button', { name: '补齐线框图或截图' })).toBeInTheDocument();
     expect(
       within(workbench).getByText('下一步动作：补齐页面流程等必要产物，并完成产品 / 设计确认。'),
     ).toBeInTheDocument();
@@ -237,6 +239,8 @@ describe('ProjectWorkspace', () => {
     expect(within(workbench).getByText('代码编写与集成')).toBeInTheDocument();
     expect(within(workbench).getByText('闸口需重检')).toBeInTheDocument();
     expect(within(workbench).getByText('过期 4 个必要产物。')).toBeInTheDocument();
+    expect(within(workbench).getByRole('button', { name: '重新生成需求文档' })).toBeInTheDocument();
+    expect(within(workbench).getByRole('button', { name: '重新生成开发任务包' })).toBeInTheDocument();
     expect(within(workbench).getByText('变更包')).toBeInTheDocument();
     expect(within(workbench).getAllByText('已过期').length).toBeGreaterThan(0);
   });
