@@ -87,7 +87,9 @@ export function ProjectWorkspace({
         viewSummary={viewSummary}
       />
 
-      {isStageDetailExpanded ? <StageDeliveryDetail detail={stageDeliveryDetail} /> : null}
+      {isStageDetailExpanded ? (
+        <StageDeliveryDetail detail={stageDeliveryDetail} pipelineStage={pipelineView.activeStage} />
+      ) : null}
 
       <div className="project-workspace-tabs" role="tablist" aria-label="项目工作区视图">
         {PROJECT_WORKSPACE_TABS.map((tab) => (
@@ -400,7 +402,7 @@ function createStageBlockerDetail(detail, stageOpenTaskCount) {
   return '当前阶段可以继续推进。';
 }
 
-function StageDeliveryDetail({ detail }) {
+function StageDeliveryDetail({ detail, pipelineStage }) {
   if (!detail) {
     return null;
   }
@@ -436,6 +438,35 @@ function StageDeliveryDetail({ detail }) {
         </div>
       </div>
       <p className="stage-delivery-next-action">{detail.nextAction}</p>
+      <PipelineStageGuidance pipelineStage={pipelineStage} />
+    </section>
+  );
+}
+
+function PipelineStageGuidance({ pipelineStage }) {
+  if (!pipelineStage) {
+    return null;
+  }
+
+  return (
+    <section className="pipeline-stage-guidance" aria-label="业务阶段指引">
+      <div>
+        <p className="eyebrow">业务阶段指引</p>
+        <strong>{`当前业务阶段：${pipelineStage.name}`}</strong>
+        <span>{`工作模式：${pipelineStage.operatingMode}`}</span>
+      </div>
+      <article>
+        <span>人工闸口</span>
+        <p>{pipelineStage.humanGate}</p>
+      </article>
+      <article>
+        <span>必要产物</span>
+        <ul>
+          {(pipelineStage.requiredArtifacts || []).map((artifact) => (
+            <li key={artifact}>{artifact}</li>
+          ))}
+        </ul>
+      </article>
     </section>
   );
 }

@@ -57,6 +57,46 @@ describe('ProjectWorkspace', () => {
     expect(onStageChange).toHaveBeenCalledWith('qa');
   });
 
+  test('shows current pipeline stage guidance in the expanded stage detail', () => {
+    const project = {
+      id: 'pipeline-guidance-demo',
+      name: '业务阶段指引项目',
+      summary: '验证当前阶段详情能说明业务 Pipeline 的交付要求。',
+      health: 'on-track',
+      currentStageId: 'architecture',
+      currentStageName: '架构与数据设计',
+      currentOwner: '技术负责人',
+      stageProgress: 4,
+      totalStages: 10,
+      stages: createPipelineWorkflowStages('architecture'),
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="architecture"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '查看阶段详情' }));
+    const stageDetail = screen.getByLabelText('阶段交付详情');
+    const guidance = within(stageDetail).getByLabelText('业务阶段指引');
+    expect(within(guidance).getByText('当前业务阶段：UI / 交互设计')).toBeInTheDocument();
+    expect(within(guidance).getByText('工作模式：人工负责，后续 AI 辅助')).toBeInTheDocument();
+    expect(within(guidance).getByText('人工闸口')).toBeInTheDocument();
+    expect(
+      within(guidance).getByText('产品或设计确认核心用户路径和关键页面交互。'),
+    ).toBeInTheDocument();
+    expect(within(guidance).getByText('页面流程')).toBeInTheDocument();
+    expect(within(guidance).getByText('交互说明')).toBeInTheDocument();
+    expect(within(guidance).getByText('线框图或截图')).toBeInTheDocument();
+  });
+
   test('uses Chinese product terms in requirement navigation and summaries', () => {
     const project = {
       id: 'copy-demo',

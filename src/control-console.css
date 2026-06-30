@@ -3586,6 +3586,63 @@ textarea:focus-visible,
   color: #92400e;
 }
 
+.pipeline-stage-guidance {
+  background: #f8fbfb;
+  border: 1px solid var(--console-border);
+  border-radius: 7px;
+  display: grid;
+  gap: 10px;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(220px, 0.48fr) minmax(260px, 0.78fr) minmax(280px, 1fr);
+  padding: 11px 12px;
+}
+
+.pipeline-stage-guidance > div,
+.pipeline-stage-guidance article {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.pipeline-stage-guidance strong {
+  color: var(--console-text);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.pipeline-stage-guidance span {
+  color: var(--console-text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pipeline-stage-guidance p {
+  color: var(--console-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pipeline-stage-guidance ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pipeline-stage-guidance li {
+  background: #ffffff;
+  border: 1px solid #d7e5e7;
+  border-radius: 999px;
+  color: var(--console-text);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
 .project-workspace-tabs,
 .operations-tabs {
   align-items: center;
@@ -6132,6 +6189,10 @@ textarea:focus-visible,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .pipeline-stage-guidance {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .stage-action-bar {
     align-items: stretch;
     grid-template-columns: minmax(0, 1fr);
@@ -6222,7 +6283,8 @@ textarea:focus-visible,
   }
 
   .project-workspace-pipeline-band-strip,
-  .project-workspace-pipeline-grid {
+  .project-workspace-pipeline-grid,
+  .pipeline-stage-guidance {
     grid-template-columns: minmax(0, 1fr);
   }
 
