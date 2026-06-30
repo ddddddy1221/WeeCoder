@@ -500,6 +500,20 @@ describe('App', () => {
     expect(screen.getByRole('dialog', { name: '新建项目' })).toBeInTheDocument();
   });
 
+  test('opens the focused project workspace from the project processing summary action', async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '项目中心' }));
+    const projectWorkbench = await screen.findByLabelText('项目组合工作台');
+    const projectProcessingDetails = within(projectWorkbench).getByLabelText('项目处理详情');
+
+    fireEvent.click(within(projectProcessingDetails).getByText('项目处理详情'));
+    fireEvent.click(within(projectProcessingDetails).getByRole('button', { name: '打开项目工作台' }));
+
+    expect(await screen.findByLabelText('项目工作区')).toBeInTheDocument();
+    expect(screen.getByLabelText('当前业务阶段工作台')).toBeInTheDocument();
+  });
+
   test('opens a focused project workspace from delivery navigation', async () => {
     render(<App />);
 

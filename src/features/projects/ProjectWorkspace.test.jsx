@@ -141,6 +141,48 @@ describe('ProjectWorkspace', () => {
     ).toBeInTheDocument();
   });
 
+  test('shows an actionable workbench for the current pipeline stage', () => {
+    const project = {
+      id: 'stage-workbench-demo',
+      name: '阶段工作台项目',
+      summary: '验证当前业务阶段可以直接看到动作、产物和人工闸口。',
+      health: 'on-track',
+      currentStageId: 'architecture',
+      currentStageName: '架构与数据设计',
+      currentOwner: '技术负责人',
+      stageProgress: 4,
+      totalStages: 10,
+      stages: createPipelineWorkflowStages('architecture'),
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="architecture"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const workbench = screen.getByLabelText('当前业务阶段工作台');
+    expect(within(workbench).getByText('阶段工作台')).toBeInTheDocument();
+    expect(within(workbench).getByText('UI / 交互设计')).toBeInTheDocument();
+    expect(within(workbench).getByText('负责人：产品 / 设计')).toBeInTheDocument();
+    expect(within(workbench).getByText('工作模式：人工负责，后续 AI 辅助')).toBeInTheDocument();
+    expect(
+      within(workbench).getByText('下一步动作：补齐页面流程等必要产物，并完成产品 / 设计确认。'),
+    ).toBeInTheDocument();
+    expect(within(workbench).getByText('页面流程')).toBeInTheDocument();
+    expect(within(workbench).getByText('交互说明')).toBeInTheDocument();
+    expect(within(workbench).getByText('人工闸口')).toBeInTheDocument();
+    expect(
+      within(workbench).getByText('产品或设计确认核心用户路径和关键页面交互。'),
+    ).toBeInTheDocument();
+  });
+
   test('uses Chinese product terms in requirement navigation and summaries', () => {
     const project = {
       id: 'copy-demo',

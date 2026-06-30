@@ -288,12 +288,19 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
     .filter(Boolean);
   const workflowStatus = resolvePipelineStatus(definition.workflowStageIds, workflowStages, activeWorkflowStageId);
   const requiredArtifacts = normalizeList(definition.requiredArtifacts);
+  const blockers = workflowStages.flatMap((stage) => normalizeList(stage.blockers));
 
   return {
     ...definition,
     artifactCount: requiredArtifacts.length,
-    blockers: workflowStages.flatMap((stage) => normalizeList(stage.blockers)),
+    blockers,
     humanGateCount: definition.humanGate ? 1 : 0,
+    nextAction: pipelineStageNextAction({
+      blockers,
+      ownerRole: definition.ownerRole,
+      requiredArtifacts,
+      status: workflowStatus,
+    }),
     status: workflowStatus,
     statusLabel: pipelineStatusLabel(workflowStatus),
     workflowStageIds: [...definition.workflowStageIds],
@@ -328,6 +335,25 @@ function pipelineStatusLabel(status) {
   };
 
   return labels[status] || '待确认';
+}
+
+function pipelineStageNextAction({ blockers, ownerRole, requiredArtifacts, status }) {
+  const assignee = ownerRole || '负责人';
+  const firstArtifact = requiredArtifacts[0] || '';
+
+  if (status === 'blocked') {
+    return blockers.length ? `先解除阻塞：${blockers[0]}。` : `先解除当前阶段阻塞，再提交${assignee}确认。`;
+  }
+
+  if (status === 'approved') {
+    return '阶段已完成，可查看产物或切换下一阶段。';
+  }
+
+  if (status === 'queued') {
+    return '等待前置阶段完成后启动。';
+  }
+
+  return `补齐${firstArtifact ? `${firstArtifact}等必要产物` : '必要产物'}，并完成${assignee}确认。`;
 }
 
 function normalizeList(value) {

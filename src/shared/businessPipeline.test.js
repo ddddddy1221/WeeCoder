@@ -95,6 +95,18 @@ describe('business pipeline metadata', () => {
     });
   });
 
+  test('adds an actionable next step for the active pipeline stage', () => {
+    const view = createProjectPipelineView({
+      currentStageId: 'architecture',
+      stages: createWorkflowStages('architecture'),
+    });
+
+    expect(view.activeStage).toMatchObject({
+      name: 'UI / 交互设计',
+      nextAction: '补齐页面流程等必要产物，并完成产品 / 设计确认。',
+    });
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(

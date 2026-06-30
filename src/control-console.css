@@ -2779,6 +2779,97 @@ textarea:focus-visible,
   padding: 8px 10px;
 }
 
+.pipeline-stage-workbench {
+  align-items: stretch;
+  background: #ffffff;
+  border: 1px solid var(--console-border);
+  border-left: 3px solid var(--console-primary);
+  border-radius: 7px;
+  display: grid;
+  gap: 10px;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(190px, 0.48fr) minmax(220px, 0.6fr) minmax(220px, 0.62fr) minmax(260px, 0.8fr) auto;
+  padding: 11px 12px;
+}
+
+.pipeline-stage-workbench.blocked {
+  border-left-color: #e11d48;
+}
+
+.pipeline-stage-workbench.approved {
+  border-left-color: #059669;
+}
+
+.pipeline-stage-workbench.queued {
+  border-left-color: #94a3b8;
+}
+
+.pipeline-stage-workbench-title,
+.pipeline-stage-workbench article {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pipeline-stage-workbench-title strong {
+  color: var(--console-text);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.pipeline-stage-workbench-title small,
+.pipeline-stage-workbench article small {
+  color: var(--console-text-secondary);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pipeline-stage-workbench article {
+  background: #f8fbfb;
+  border: 1px solid #dbe7e8;
+  border-radius: 7px;
+  padding: 8px 10px;
+}
+
+.pipeline-stage-workbench article span {
+  color: var(--console-primary);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pipeline-stage-workbench article p {
+  color: var(--console-text);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.pipeline-stage-workbench-artifacts ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pipeline-stage-workbench-artifacts li {
+  background: #eef9f7;
+  border: 1px solid #c6e7e2;
+  border-radius: 999px;
+  color: var(--console-text);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 7px;
+}
+
+.pipeline-stage-workbench > button {
+  align-self: center;
+  min-height: 34px;
+  white-space: nowrap;
+}
+
 .project-workspace-pipeline-track > summary {
   align-items: center;
   cursor: pointer;
@@ -6294,6 +6385,14 @@ textarea:focus-visible,
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .pipeline-stage-workbench {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pipeline-stage-workbench > button {
+    justify-self: start;
+  }
+
   .project-workspace-pipeline-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -6393,6 +6492,7 @@ textarea:focus-visible,
 
   .project-workspace-pipeline-band-strip,
   .project-workspace-pipeline-grid,
+  .pipeline-stage-workbench,
   .pipeline-stage-guidance {
     grid-template-columns: minmax(0, 1fr);
   }

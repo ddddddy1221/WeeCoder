@@ -196,6 +196,12 @@ function ProjectWorkspaceFocusPanel({
         ) : null}
       </details>
       <ActivePipelineBandSummary pipelineView={pipelineView} />
+      <PipelineStageWorkbench
+        detail={detail}
+        isExpanded={isExpanded}
+        onOpenDetail={onToggle}
+        pipelineStage={pipelineView.activeStage}
+      />
       <ProjectPipelineTrack onStageChange={onStageChange} pipelineView={pipelineView} />
       <details className="project-workspace-stage-track" aria-label="阶段轨道">
         <summary>
@@ -270,6 +276,53 @@ function ActivePipelineBandSummary({ pipelineView }) {
         ))}
       </ul>
       <p>{band.nextAction}</p>
+    </section>
+  );
+}
+
+function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStage }) {
+  if (!pipelineStage) {
+    return null;
+  }
+
+  const artifacts = Array.isArray(pipelineStage.requiredArtifacts) ? pipelineStage.requiredArtifacts : [];
+
+  return (
+    <section
+      className={`pipeline-stage-workbench ${pipelineStage.status || 'queued'}`}
+      aria-label="当前业务阶段工作台"
+    >
+      <div className="pipeline-stage-workbench-title">
+        <p className="eyebrow">阶段工作台</p>
+        <strong>{pipelineStage.name}</strong>
+        <small>{`负责人：${pipelineStage.ownerRole}`}</small>
+        <small>{`工作模式：${pipelineStage.operatingMode}`}</small>
+      </div>
+      <article className="pipeline-stage-workbench-action">
+        <span>下一步动作</span>
+        <p>{`下一步动作：${pipelineStage.nextAction}`}</p>
+        <small>{detail?.statusLabel ? `当前状态：${detail.statusLabel}` : pipelineStage.statusLabel}</small>
+      </article>
+      <article>
+        <span>人工闸口</span>
+        <p>{pipelineStage.humanGate || '当前阶段暂无人工闸口。'}</p>
+      </article>
+      <article className="pipeline-stage-workbench-artifacts">
+        <span>必要产物</span>
+        <ul>
+          {artifacts.map((artifact) => (
+            <li key={artifact}>{artifact}</li>
+          ))}
+        </ul>
+      </article>
+      <button
+        aria-expanded={isExpanded}
+        className="stage-detail-toggle secondary"
+        onClick={onOpenDetail}
+        type="button"
+      >
+        {isExpanded ? '收起交付详情' : '展开交付详情'}
+      </button>
     </section>
   );
 }
