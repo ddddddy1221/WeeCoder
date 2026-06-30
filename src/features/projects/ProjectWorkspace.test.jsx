@@ -194,6 +194,49 @@ describe('ProjectWorkspace', () => {
     ).toBeInTheDocument();
   });
 
+  test('shows stale downstream artifact state when the PRD version is stale', () => {
+    const project = {
+      id: 'stale-artifact-demo',
+      name: '过期产物项目',
+      summary: '验证 PRD 变更后下游产物需要重新确认。',
+      health: 'warning',
+      currentStageId: 'development',
+      currentStageName: '自动开发',
+      currentOwner: 'AI 开发',
+      stageProgress: 6,
+      totalStages: 10,
+      artifacts: {
+        development: '# 开发变更包\n\n变更包已生成。',
+      },
+      prdChangeImpact: {
+        status: 'stale',
+        summary: 'PRD v1 已过期：范围边界 已变更。',
+      },
+      prdVersion: {
+        label: 'v1',
+        status: 'stale',
+      },
+      stages: createPipelineWorkflowStages('development'),
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="development"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="development"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const workbench = screen.getByLabelText('当前业务阶段工作台');
+    expect(within(workbench).getByText('代码编写与集成')).toBeInTheDocument();
+    expect(within(workbench).getByText('变更包')).toBeInTheDocument();
+    expect(within(workbench).getAllByText('已过期').length).toBeGreaterThan(0);
+  });
+
   test('uses Chinese product terms in requirement navigation and summaries', () => {
     const project = {
       id: 'copy-demo',

@@ -310,6 +310,7 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
 
 function createPipelineArtifactStatuses(definition, project, stageStatus) {
   const requiredArtifacts = normalizeList(definition.requiredArtifacts);
+  const isDownstreamStale = isPrdStale(project) && definition.band !== 'requirements' && stageStatus !== 'queued';
   const artifactText = definition.workflowStageIds
     .map((stageId) => project.artifacts?.[stageId] || '')
     .join('\n')
@@ -323,6 +324,7 @@ function createPipelineArtifactStatuses(definition, project, stageStatus) {
     const normalizedArtifact = artifact.toLowerCase();
     const status = resolveArtifactStatus({
       artifactText,
+      isDownstreamStale,
       missingText,
       normalizedArtifact,
       stageStatus,
@@ -336,7 +338,11 @@ function createPipelineArtifactStatuses(definition, project, stageStatus) {
   });
 }
 
-function resolveArtifactStatus({ artifactText, missingText, normalizedArtifact, stageStatus }) {
+function resolveArtifactStatus({ artifactText, isDownstreamStale, missingText, normalizedArtifact, stageStatus }) {
+  if (isDownstreamStale) {
+    return 'stale';
+  }
+
   if (missingText.includes(normalizedArtifact)) {
     return 'missing';
   }
@@ -362,10 +368,15 @@ function artifactStatusLabel(status) {
     generated: '已生成',
     missing: '缺失',
     'needs-confirmation': '需确认',
+    stale: '已过期',
     waiting: '等待前置',
   };
 
   return labels[status] || '待确认';
+}
+
+function isPrdStale(project = {}) {
+  return project.prdVersion?.status === 'stale' || project.prdChangeImpact?.status === 'stale';
 }
 
 function resolvePipelineStatus(workflowStageIds, workflowStages, activeWorkflowStageId) {

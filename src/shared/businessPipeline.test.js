@@ -140,6 +140,43 @@ describe('business pipeline metadata', () => {
     });
   });
 
+  test('marks started downstream artifacts stale when the approved PRD becomes stale', () => {
+    const view = createProjectPipelineView({
+      artifacts: {
+        development: '# 开发变更包\n\n变更包已生成。',
+        qa: '# 测试用例\n\n功能用例已生成。',
+      },
+      currentStageId: 'development',
+      prdChangeImpact: {
+        status: 'stale',
+        summary: 'PRD v1 已过期：范围边界 已变更。',
+      },
+      prdVersion: {
+        label: 'v1',
+        status: 'stale',
+      },
+      stages: createWorkflowStages('development').map((stage) =>
+        stage.id === 'acceptance' ? { ...stage, status: 'queued' } : stage,
+      ),
+    });
+
+    expect(view.stages.find((stage) => stage.id === 'implementation-integration').artifacts[0]).toMatchObject({
+      name: '变更包',
+      status: 'stale',
+      statusLabel: '已过期',
+    });
+    expect(view.stages.find((stage) => stage.id === 'test-case-design').artifacts[0]).toMatchObject({
+      name: '功能用例',
+      status: 'stale',
+      statusLabel: '已过期',
+    });
+    expect(view.stages.find((stage) => stage.id === 'deployment').artifacts[0]).toMatchObject({
+      name: '部署记录',
+      status: 'waiting',
+      statusLabel: '等待前置',
+    });
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(

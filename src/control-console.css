@@ -2882,6 +2882,11 @@ textarea:focus-visible,
   border-color: #fde68a;
 }
 
+.pipeline-stage-workbench-artifacts li.stale {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
 .pipeline-stage-workbench-artifacts li.approved {
   background: #ecfdf5;
   border-color: #bbf7d0;
@@ -2912,6 +2917,10 @@ textarea:focus-visible,
 
 .pipeline-stage-workbench-artifacts li.needs-confirmation small {
   color: #92400e;
+}
+
+.pipeline-stage-workbench-artifacts li.stale small {
+  color: #c2410c;
 }
 
 .pipeline-stage-workbench > button {
