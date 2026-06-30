@@ -256,7 +256,12 @@ function ActivePipelineBandSummary({ pipelineView }) {
       </div>
       <ul className="active-pipeline-band-stages">
         {band.stages.map((stage) => (
-          <li key={stage.id}>{stage.name}</li>
+          <li key={stage.id}>
+            <strong>{stage.name}</strong>
+            <small>{`${stage.statusLabel || '待确认'} · 产物 ${stage.artifactCount || 0} · 闸口 ${
+              stage.humanGateCount || 0
+            }`}</small>
+          </li>
         ))}
       </ul>
       <ul className="active-pipeline-band-artifacts">

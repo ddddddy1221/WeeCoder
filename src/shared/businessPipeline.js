@@ -287,11 +287,15 @@ function createPipelineStageCard(definition, workflowStageMap, activeWorkflowSta
     .map((stageId) => workflowStageMap.get(stageId))
     .filter(Boolean);
   const workflowStatus = resolvePipelineStatus(definition.workflowStageIds, workflowStages, activeWorkflowStageId);
+  const requiredArtifacts = normalizeList(definition.requiredArtifacts);
 
   return {
     ...definition,
+    artifactCount: requiredArtifacts.length,
     blockers: workflowStages.flatMap((stage) => normalizeList(stage.blockers)),
+    humanGateCount: definition.humanGate ? 1 : 0,
     status: workflowStatus,
+    statusLabel: pipelineStatusLabel(workflowStatus),
     workflowStageIds: [...definition.workflowStageIds],
   };
 }
@@ -313,6 +317,17 @@ function resolvePipelineStatus(workflowStageIds, workflowStages, activeWorkflowS
     return 'active';
   }
   return 'queued';
+}
+
+function pipelineStatusLabel(status) {
+  const labels = {
+    active: '进行中',
+    approved: '已完成',
+    blocked: '已阻塞',
+    queued: '等待中',
+  };
+
+  return labels[status] || '待确认';
 }
 
 function normalizeList(value) {

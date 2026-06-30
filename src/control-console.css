@@ -2731,14 +2731,26 @@ textarea:focus-visible,
   padding: 0;
 }
 
-.active-pipeline-band-summary li {
+.active-pipeline-band-stages li {
   background: #ffffff;
   border: 1px solid #d7e5e7;
-  border-radius: 999px;
+  border-radius: 7px;
   color: var(--console-text);
+  display: grid;
   font-size: 11px;
+  gap: 2px;
+  min-width: 142px;
+  padding: 7px 9px;
+}
+
+.active-pipeline-band-stages li strong {
+  font-size: 12px;
+}
+
+.active-pipeline-band-stages li small {
+  color: var(--console-text-secondary);
+  font-size: 10px;
   font-weight: 900;
-  padding: 5px 8px;
 }
 
 .active-pipeline-band-artifacts {
@@ -2747,7 +2759,12 @@ textarea:focus-visible,
 
 .active-pipeline-band-artifacts li {
   background: #eef9f7;
-  border-color: #c6e7e2;
+  border: 1px solid #c6e7e2;
+  border-radius: 999px;
+  color: var(--console-text);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
 }
 
 .active-pipeline-band-summary > p {

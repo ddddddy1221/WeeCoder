@@ -75,6 +75,26 @@ describe('business pipeline metadata', () => {
     );
   });
 
+  test('annotates each pipeline stage with status labels and readiness counts', () => {
+    const view = createProjectPipelineView({
+      currentStageId: 'architecture',
+      stages: createWorkflowStages('architecture'),
+    });
+
+    expect(view.stages.find((stage) => stage.id === 'ui-interaction-design')).toMatchObject({
+      artifactCount: 3,
+      humanGateCount: 1,
+      status: 'active',
+      statusLabel: '进行中',
+    });
+    expect(view.stages.find((stage) => stage.id === 'ops-requirements')).toMatchObject({
+      artifactCount: 4,
+      humanGateCount: 1,
+      status: 'approved',
+      statusLabel: '已完成',
+    });
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(

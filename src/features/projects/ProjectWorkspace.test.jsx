@@ -129,6 +129,9 @@ describe('ProjectWorkspace', () => {
     expect(within(bandSummary).getByText('UI / 交互设计')).toBeInTheDocument();
     expect(within(bandSummary).getByText('ERD / 技术设计')).toBeInTheDocument();
     expect(within(bandSummary).getByText('运维需求')).toBeInTheDocument();
+    expect(within(bandSummary).getAllByText('进行中 · 产物 3 · 闸口 1')).toHaveLength(1);
+    expect(within(bandSummary).getAllByText('进行中 · 产物 4 · 闸口 1')).toHaveLength(1);
+    expect(within(bandSummary).getByText('等待中 · 产物 4 · 闸口 1')).toBeInTheDocument();
     expect(within(bandSummary).getByText('必要产物 11')).toBeInTheDocument();
     expect(within(bandSummary).getByText('人工闸口 3')).toBeInTheDocument();
     expect(within(bandSummary).getByText('页面流程')).toBeInTheDocument();
