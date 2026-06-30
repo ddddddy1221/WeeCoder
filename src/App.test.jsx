@@ -7331,6 +7331,108 @@ describe('App', () => {
     expect(within(handoffDetails).getByText('RTSP、运行环境、日志监控')).toBeVisible();
   });
 
+  test('records suggested pipeline actions before opening the manual work area', async () => {
+    const architectureProject = {
+      ...baseProject,
+      currentStageId: 'architecture',
+      currentStageName: '架构与数据设计',
+      currentOwner: '技术负责人',
+      stageProgress: 3,
+      totalStages: 4,
+      artifacts: {
+        architecture: '# 设计产物\n\n页面流程已生成。\n\n交互说明已补齐。',
+      },
+      stageConfirmations: {
+        architecture: {
+          missingItems: [{ id: 'wireframe', title: '线框图或截图' }],
+        },
+      },
+      stages: [
+        { ...stages[0], status: 'approved' },
+        { ...stages[1], status: 'approved' },
+        { ...stages[2], status: 'approved' },
+        {
+          id: 'architecture',
+          name: '架构与数据设计',
+          owner: '技术负责人',
+          status: 'active',
+          description: '确认系统方案。',
+          checklist: ['定义页面流程', '确认线框图'],
+        },
+      ],
+    };
+    const auditedProject = {
+      ...architectureProject,
+      history: [
+        {
+          type: 'pipeline-flow-action-recorded',
+          actionId: 'complete-artifact-wireframe',
+          actionLabel: '补齐线框图或截图',
+          auditReason: 'api-pipeline-flow-action-recorded',
+        },
+      ],
+    };
+
+    global.fetch = vi.fn(async (url, options = {}) => {
+      if (url === '/api/users' && !options.method) {
+        return jsonResponse({ users: appUsers, currentUser: appUsers[0] });
+      }
+      if (url === '/api/platform' && !options.method) {
+        return jsonResponse({ platform: platformCockpit });
+      }
+      if (url === '/api/me/tasks' && !options.method) {
+        return jsonResponse({ currentUser: appUsers[0], tasks: [] });
+      }
+      if (url === '/api/projects' && !options.method) {
+        return jsonResponse({
+          projects: [
+            {
+              ...projectSummary,
+              currentStageId: 'architecture',
+              currentStageName: '架构与数据设计',
+              stageProgress: 3,
+            },
+          ],
+        });
+      }
+      if (url === '/api/projects/demo-1' && !options.method) {
+        return jsonResponse({ project: architectureProject });
+      }
+      if (url === '/api/projects/demo-1/pipeline-flow-actions' && options.method === 'POST') {
+        return jsonResponse({ project: auditedProject, platform: platformCockpit });
+      }
+      return jsonResponse({ error: 'not found' }, 404);
+    });
+
+    render(<App />);
+    await openDeliveryConsole();
+
+    const workbench = await screen.findByLabelText('当前业务阶段工作台');
+    fireEvent.click(within(workbench).getByRole('button', { name: '补齐线框图或截图' }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/projects/demo-1/pipeline-flow-actions',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('complete-artifact-wireframe'),
+        }),
+      );
+    });
+    const requestBody = JSON.parse(
+      global.fetch.mock.calls.find(([url]) => url === '/api/projects/demo-1/pipeline-flow-actions')[1].body,
+    );
+    expect(requestBody).toMatchObject({
+      actionId: 'complete-artifact-wireframe',
+      actionLabel: '补齐线框图或截图',
+      commandHandler: 'openStageDetail',
+      commandKind: 'manual',
+      pipelineStageId: 'ui-interaction-design',
+      workflowStageId: 'architecture',
+    });
+    expect(await screen.findByText('已提交：补齐线框图或截图')).toBeInTheDocument();
+  });
+
   test('shows current stage risk register and functional gaps', async () => {
     global.fetch = vi.fn(async (url, options = {}) => {
       if (url === '/api/projects' && !options.method) {

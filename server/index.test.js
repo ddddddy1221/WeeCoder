@@ -3609,6 +3609,62 @@ describe('delivery API', () => {
     });
   });
 
+  test('records pipeline flow action selections with authenticated audit metadata', async () => {
+    const strictApp = createApp({ store, requireAuthentication: true });
+    const project = {
+      ...createProject({
+        name: 'Pipeline Action Audit Project',
+        sponsor: 'AA',
+        summary: 'Suggested pipeline actions must become auditable project events.',
+      }),
+      organizationId: 'wee-coder-labs',
+      currentStageId: STAGE_IDS.ARCHITECTURE,
+      members: {
+        owner: 'owner-aa',
+        'tech-lead': 'tech-chen',
+      },
+    };
+    await store.addProject(project);
+
+    const login = await request(strictApp)
+      .post('/api/auth/login')
+      .send({ userId: 'tech-chen', password: 'demo123', organizationId: 'wee-coder-labs' })
+      .expect(200);
+
+    const response = await request(strictApp)
+      .post(`/api/projects/${project.id}/pipeline-flow-actions`)
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .set('X-Organization-Id', 'wee-coder-labs')
+      .send({
+        actionId: 'complete-artifact-wireframe',
+        actionLabel: '补齐线框图或截图',
+        commandHandler: 'openStageDetail',
+        commandKind: 'manual',
+        pipelineStageId: 'ui-interaction-design',
+        pipelineStageName: 'UI / 交互设计',
+        workflowStageId: STAGE_IDS.ARCHITECTURE,
+      })
+      .expect(200);
+
+    expect(response.body.project.history[0]).toMatchObject({
+      type: 'pipeline-flow-action-recorded',
+      actorUserId: 'tech-chen',
+      organizationId: 'wee-coder-labs',
+      auditReason: 'api-pipeline-flow-action-recorded',
+      actionId: 'complete-artifact-wireframe',
+      actionLabel: '补齐线框图或截图',
+      commandHandler: 'openStageDetail',
+      commandKind: 'manual',
+      pipelineStageId: 'ui-interaction-design',
+      pipelineStageName: 'UI / 交互设计',
+      workflowStageId: STAGE_IDS.ARCHITECTURE,
+    });
+    expect(response.body.platform.governance.auditLog[0]).toMatchObject({
+      auditReason: 'api-pipeline-flow-action-recorded',
+      projectId: project.id,
+    });
+  });
+
   test('rejects stage confirmation updates outside the current stage', async () => {
     const project = {
       ...createProject({

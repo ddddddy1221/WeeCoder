@@ -1113,6 +1113,8 @@ export default function App() {
       };
     }
 
+    await recordPipelineFlowAction(action, pipelineStage, command);
+
     if (command.stageId) {
       setViewStageId(command.stageId);
       setActiveProjectTab(getWorkspaceTabForStage(command.stageId));
@@ -1142,6 +1144,28 @@ export default function App() {
     }
 
     return command;
+  }
+
+  async function recordPipelineFlowAction(action, pipelineStage, command) {
+    const workflowStageId = command.stageId || pipelineStage?.workflowStageIds?.[0] || selectedProject?.currentStageId || '';
+    const data = await callApi(`/api/projects/${selectedProject.id}/pipeline-flow-actions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actionId: action.id || '',
+        actionLabel: action.label || '',
+        commandHandler: command.handler || '',
+        commandKind: command.kind || '',
+        pipelineStageId: pipelineStage?.id || '',
+        pipelineStageName: pipelineStage?.name || '',
+        workflowStageId,
+      }),
+    });
+
+    updateProjectState(data.project);
+    if (data.platform) {
+      setPlatform(data.platform);
+    }
   }
 
   async function saveRepositoryConfig(event) {

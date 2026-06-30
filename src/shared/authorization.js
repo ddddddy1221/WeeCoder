@@ -71,6 +71,7 @@ const ACTION_POLICIES = Object.freeze({
   'resolve-notification-action': ['owner', 'pm', 'tech-lead', 'ops', 'ai-dev', 'local-runner', 'qa'],
   'send-owner-escalation': ['owner'],
   'acknowledge-owner-escalation': ['owner', 'pm', 'tech-lead', 'ops', 'ai-dev', 'local-runner', 'qa'],
+  'record-pipeline-flow-action': ['owner', 'pm', 'tech-lead', 'ops', 'ai-dev', 'local-runner', 'qa'],
 });
 
 const ADVANCE_ROLES_BY_STAGE = Object.freeze({
@@ -106,6 +107,7 @@ const ACTION_DENIAL_REASONS = Object.freeze({
   'resolve-notification-action': '当前角色无权关闭通知待办。',
   'send-owner-escalation': '当前角色无权发送负责人升级提醒。',
   'acknowledge-owner-escalation': '当前角色无权确认负责人升级提醒。',
+  'record-pipeline-flow-action': '当前角色无权记录业务流转动作。',
   'update-deployment-environment': '当前角色无权维护部署环境状态。',
   'manage-members': '当前角色无权维护项目成员。',
   'update-stage-confirmations': '当前角色无权维护当前阶段确认事项。',

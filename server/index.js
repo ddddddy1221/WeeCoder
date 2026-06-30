@@ -1161,6 +1161,71 @@ export function createApp({
     }
   });
 
+  app.post('/api/projects/:projectId/pipeline-flow-actions', async (req, res, next) => {
+    try {
+      const session = resolvePlatformSession(req);
+      const project = await getProjectForSession(projectRepository, req.params.projectId, session);
+      if (!project) {
+        res.status(404).json({ error: '项目不存在。' });
+        return;
+      }
+
+      const normalized = normalizeProject(project);
+      const identity = authorizeProjectAction(
+        req,
+        normalized,
+        'record-pipeline-flow-action',
+        getCurrentStage(normalized)?.owner || '系统',
+      );
+      const actionId = String(req.body.actionId || '').trim();
+      if (!actionId) {
+        throw new WorkflowGateError('建议动作 ID 不能为空。', {
+          projectId: req.params.projectId,
+        });
+      }
+
+      const actionLabel = String(req.body.actionLabel || '').trim() || actionId;
+      const updated = await projectRepository.appendAuditEvent(
+        req.params.projectId,
+        {
+          type: 'pipeline-flow-action-recorded',
+          actor: identity.user ? actorFromUser(identity.user) : identity.actor,
+          actionId,
+          actionLabel,
+          commandHandler: String(req.body.commandHandler || '').trim(),
+          commandKind: String(req.body.commandKind || '').trim(),
+          pipelineStageId: String(req.body.pipelineStageId || '').trim(),
+          pipelineStageName: String(req.body.pipelineStageName || '').trim(),
+          workflowStageId: String(req.body.workflowStageId || normalized.currentStageId || '').trim(),
+          note: `记录业务流转建议动作：${actionLabel}`,
+        },
+        {
+          organizationId: session.currentOrganization.id,
+          actorId: getIdentityActorId(identity),
+          auditReason: 'api-pipeline-flow-action-recorded',
+        },
+      );
+
+      if (!updated) {
+        res.status(404).json({ error: '项目不存在。' });
+        return;
+      }
+
+      const projects = await listProjectsForSession(projectRepository, session);
+      const normalizedProjects = projects.map(normalizeProject);
+      const normalizedUpdated = normalizeProject(updated);
+      res.json({
+        project: normalizedUpdated,
+        platform: createPlatformCockpit(normalizedProjects, {
+          session,
+          storageProfile: getRepositoryStorageProfile(projectRepository),
+        }),
+      });
+    } catch (error) {
+      sendWorkflowError(error, res, next);
+    }
+  });
+
   app.post('/api/projects/:projectId/advance', async (req, res, next) => {
     try {
       const session = resolvePlatformSession(req);
