@@ -1,0 +1,438 @@
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import { ProjectWorkspace } from './ProjectWorkspace.jsx';
+
+describe('ProjectWorkspace', () => {
+  test('uses Chinese product terms in requirement navigation and summaries', () => {
+    const project = {
+      id: 'copy-demo',
+      name: '中文文案演示项目',
+      summary: '验证项目详情页静态文案不混入英文缩写。',
+      health: 'on-track',
+      currentStageId: 'pm-requirements',
+      currentStageName: 'PM requirements',
+      currentOwner: '项目经理',
+      stageProgress: 1,
+      totalStages: 2,
+      stages: [
+        {
+          id: 'pm-requirements',
+          name: 'PM requirements',
+          owner: '项目经理',
+          status: 'active',
+          description: '逐轮澄清需求。',
+          checklist: ['确认目标用户'],
+        },
+        {
+          id: 'prd-approval',
+          name: 'PRD 审批',
+          owner: '负责人',
+          status: 'queued',
+          description: '审批需求文档。',
+          checklist: ['确认范围'],
+        },
+      ],
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="requirements"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="pm-requirements"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const workspaceHeader = screen.getByLabelText('项目头部');
+    expect(workspaceHeader).toHaveClass('compact-workspace-header');
+
+    const tablist = screen.getByRole('tablist', { name: '项目工作区视图' });
+    expect(within(tablist).getByRole('tab', { name: '需求文档' })).toBeInTheDocument();
+    expect(within(tablist).queryByRole('tab', { name: '需求与 PRD' })).not.toBeInTheDocument();
+
+    const statusBar = screen.getByLabelText('项目状态条');
+    expect(statusBar).toHaveClass('compact-status-strip');
+    expect(screen.queryByLabelText('项目处理焦点')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('交付阶段')).not.toBeInTheDocument();
+    const viewGuide = within(statusBar).getByLabelText('视图说明');
+    expect(viewGuide.tagName).toBe('DETAILS');
+    expect(viewGuide).toHaveClass('compact-view-guide');
+    expect(viewGuide).not.toHaveAttribute('open');
+    expect(within(viewGuide).getByText('当前视图：需求文档')).toBeInTheDocument();
+    expect(within(viewGuide).getByText('展开视图说明')).toBeInTheDocument();
+    expect(within(viewGuide).queryByText('关联阶段：项目经理需求')).not.toBeInTheDocument();
+    expect(within(viewGuide).queryByText('聚焦需求确认、需求文档草稿和缺项追问。')).not.toBeInTheDocument();
+    fireEvent.click(within(viewGuide).getByText('展开视图说明'));
+    expect(viewGuide).toHaveAttribute('open');
+    expect(within(viewGuide).getByText('建议下一步：补齐需求缺项并生成需求文档。')).toBeVisible();
+    expect(within(viewGuide).getByText('聚焦需求确认、需求文档草稿和缺项追问。')).toBeVisible();
+    expect(within(viewGuide).getByText('关联阶段：项目经理需求')).toBeVisible();
+    expect(screen.queryByLabelText('项目视图摘要')).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('PRD');
+  });
+
+  test('localizes mixed Chinese and English review stage names', () => {
+    const project = {
+      id: 'review-demo',
+      name: '评审演示项目',
+      summary: '验证阶段名称本地化。',
+      health: 'on-track',
+      currentStageId: 'review',
+      currentStageName: '代码/安全/性能 Review',
+      currentOwner: '技术负责人',
+      stageProgress: 1,
+      totalStages: 1,
+      stages: [
+        {
+          id: 'review',
+          name: '代码/安全/性能 Review',
+          owner: '技术负责人',
+          status: 'active',
+          description: '执行代码、安全、性能评审。',
+          checklist: ['代码评审', '安全检查', '性能检查'],
+        },
+      ],
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="review"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    expect(screen.getAllByText('代码、安全、性能评审').length).toBeGreaterThan(0);
+    expect(screen.queryByText('代码/安全/性能 Review')).not.toBeInTheDocument();
+  });
+
+  test('shows a compact current-stage action bar and keeps delivery detail collapsed by default', () => {
+    const project = {
+      id: 'pm-demo',
+      name: '需求演示项目',
+      summary: '验证阶段行动条。',
+      health: 'warning',
+      currentStageId: 'pm-requirements',
+      currentStageName: 'PM requirements',
+      currentOwner: '项目经理',
+      openFollowupTaskCount: 2,
+      stageProgress: 1,
+      totalStages: 3,
+      stageConfirmations: {
+        'pm-requirements': {
+          missingItems: [
+            { id: 'target-users', title: '目标用户与核心场景' },
+            { id: 'success-metrics', title: '成功指标与验收口径' },
+          ],
+        },
+      },
+      stageRiskRegister: {
+        'pm-requirements': {
+          potentialRisks: [{ title: '测试样本不足' }],
+          functionalGaps: [{ title: '浏览器范围未确认' }],
+        },
+      },
+      artifacts: {
+        'pm-requirements': '# 需求文档草案\n\n- 目标用户待确认',
+      },
+      stages: [
+        {
+          id: 'pm-requirements',
+          name: 'PM requirements',
+          owner: '项目经理',
+          status: 'active',
+          description: '逐轮澄清需求。',
+          checklist: ['确认目标用户', '确认验收口径'],
+        },
+        {
+          id: 'prd-approval',
+          name: 'PRD approval',
+          owner: '负责人',
+          status: 'queued',
+          description: '审批需求文档。',
+          checklist: ['确认范围'],
+        },
+      ],
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="requirements"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="pm-requirements"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    expect(screen.queryByLabelText('当前阶段工作台')).not.toBeInTheDocument();
+    const focusSummary = screen.getByLabelText('项目状态条');
+    expect(screen.queryByLabelText('项目处理焦点')).not.toBeInTheDocument();
+    expect(within(focusSummary).getByText('进度 33%')).toBeInTheDocument();
+    expect(within(focusSummary).getByText('阶段 1/3')).toBeInTheDocument();
+    expect(within(focusSummary).getByText('确认缺项 2')).toBeInTheDocument();
+    expect(within(focusSummary).getByText('风险不足 2')).toBeInTheDocument();
+    const currentStageSummary = within(focusSummary).getByLabelText('当前阶段摘要');
+    const nextActionSummary = within(focusSummary).getByLabelText('下一步动作摘要');
+    expect(within(currentStageSummary).getByText('当前阶段')).toBeInTheDocument();
+    expect(within(currentStageSummary).getByText('项目经理需求')).toBeInTheDocument();
+    expect(within(currentStageSummary).queryByText('逐轮澄清需求。')).not.toBeInTheDocument();
+    expect(within(nextActionSummary).getByText('下一步动作')).toBeInTheDocument();
+    expect(within(nextActionSummary).getByText('补齐确认事项后进入下一闸口')).toBeInTheDocument();
+    expect(
+      within(nextActionSummary).queryByText('优先补齐当前阶段确认事项，再进入下一闸口。'),
+    ).not.toBeInTheDocument();
+    expect(within(focusSummary).queryByLabelText('概览关键指标')).not.toBeInTheDocument();
+    expect(within(focusSummary).queryByText('需求文档草案')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('项目概览状态条')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('交付焦点摘要')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('项目交付总览')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('当前阶段行动条')).not.toBeInTheDocument();
+    expect(within(currentStageSummary).getByText('进行中 · 项目经理')).toBeInTheDocument();
+    expect(within(nextActionSummary).getByText('确认缺项 2 · 阻塞待办 2')).toBeInTheDocument();
+    expect(within(focusSummary).queryByLabelText('当前阶段指标')).not.toBeInTheDocument();
+    expect(within(focusSummary).queryByText('检查项 2')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('阶段指挥条')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('阶段上下文')).not.toBeInTheDocument();
+    expect(document.querySelector('.delivery-stage-strip')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('交付阶段')).not.toBeInTheDocument();
+    const stageShell = within(focusSummary).getByLabelText('阶段轨道');
+    expect(stageShell.tagName).toBe('DETAILS');
+    expect(stageShell).not.toHaveAttribute('open');
+    expect(within(stageShell).getByText('阶段轨道')).toBeInTheDocument();
+    expect(within(stageShell).getByText('当前 1/3')).toBeInTheDocument();
+    const stageRail = within(stageShell).getByLabelText('阶段进度轨道');
+    expect(within(stageRail).getByText('项目经理需求')).toBeInTheDocument();
+    expect(within(stageRail).getByText('项目经理需求')).not.toBeVisible();
+    fireEvent.click(within(stageShell).getByText('阶段轨道'));
+    expect(stageShell).toHaveAttribute('open');
+    expect(within(stageRail).getByText('项目经理需求')).toBeVisible();
+    expect(within(stageRail).getByText('需求文档审批')).toBeVisible();
+    expect(screen.queryByLabelText('阶段交付详情')).not.toBeInTheDocument();
+    fireEvent.click(within(focusSummary).getByRole('button', { name: '查看阶段详情' }));
+    const stageDetail = screen.getByLabelText('阶段交付详情');
+    expect(stageDetail).toBeInTheDocument();
+    expect(within(stageDetail).getByText('逐轮澄清需求。')).toBeInTheDocument();
+    expect(
+      within(stageDetail).getByText('优先补齐当前阶段确认事项，再进入下一闸口。'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '收起阶段详情' })).toBeInTheDocument();
+    expect(screen.getByText('需求文档审批')).toBeInTheDocument();
+    expect(screen.queryByText('PRD approval')).not.toBeInTheDocument();
+  });
+
+  test('combines project status, stage action, and view guidance into one focus panel', () => {
+    const project = {
+      id: 'focus-panel-demo',
+      name: '项目焦点演示',
+      summary: '验证项目工作台首屏只保留一个处理焦点。',
+      health: 'warning',
+      currentStageId: 'pm-requirements',
+      currentStageName: 'PM requirements',
+      currentOwner: '项目经理',
+      openFollowupTaskCount: 2,
+      stageProgress: 1,
+      totalStages: 3,
+      stageConfirmations: {
+        'pm-requirements': {
+          missingItems: [{ id: 'target-users', title: '目标用户与核心场景' }],
+        },
+      },
+      stageRiskRegister: {
+        'pm-requirements': {
+          potentialRisks: [{ title: '测试样本不足' }],
+          functionalGaps: [],
+        },
+      },
+      stages: [
+        {
+          id: 'pm-requirements',
+          name: 'PM requirements',
+          owner: '项目经理',
+          status: 'active',
+          description: '逐轮澄清需求。',
+          checklist: ['确认目标用户', '确认验收口径'],
+        },
+        {
+          id: 'prd-approval',
+          name: 'PRD approval',
+          owner: '负责人',
+          status: 'queued',
+          description: '审批需求文档。',
+          checklist: ['确认范围'],
+        },
+      ],
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="requirements"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="pm-requirements"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const focusPanel = screen.getByLabelText('项目状态条');
+    expect(screen.queryByLabelText('项目处理焦点')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('交付阶段')).not.toBeInTheDocument();
+    const currentStageSummary = within(focusPanel).getByLabelText('当前阶段摘要');
+    const nextActionSummary = within(focusPanel).getByLabelText('下一步动作摘要');
+    expect(within(currentStageSummary).getByText('当前阶段')).toBeInTheDocument();
+    expect(within(currentStageSummary).getByText('项目经理需求')).toBeInTheDocument();
+    expect(within(nextActionSummary).getByText('下一步动作')).toBeInTheDocument();
+    expect(within(nextActionSummary).getByText('补齐确认事项后进入下一闸口')).toBeInTheDocument();
+    expect(
+      within(nextActionSummary).queryByText('优先补齐当前阶段确认事项，再进入下一闸口。'),
+    ).not.toBeInTheDocument();
+    expect(within(focusPanel).getByText('进度 33%')).toBeInTheDocument();
+    expect(within(focusPanel).getByText('阶段 1/3')).toBeInTheDocument();
+    expect(within(focusPanel).getByText('确认缺项 2')).toBeInTheDocument();
+    expect(within(focusPanel).getByText('当前视图：需求文档')).toBeInTheDocument();
+
+    const viewGuide = within(focusPanel).getByLabelText('视图说明');
+    expect(viewGuide).not.toHaveAttribute('open');
+    expect(within(viewGuide).queryByText('聚焦需求确认、需求文档草稿和缺项追问。')).not.toBeInTheDocument();
+    fireEvent.click(within(viewGuide).getByText('展开视图说明'));
+    expect(within(viewGuide).getByText('聚焦需求确认、需求文档草稿和缺项追问。')).toBeVisible();
+
+    expect(screen.queryByLabelText('项目概览状态条')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('当前阶段行动条')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('项目视图摘要')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('阶段交付详情')).not.toBeInTheDocument();
+    fireEvent.click(within(focusPanel).getByRole('button', { name: '查看阶段详情' }));
+    expect(screen.getByLabelText('阶段交付详情')).toBeInTheDocument();
+  });
+
+  test('uses a compact command strip on the overview and keeps stage detail expandable', () => {
+    const project = {
+      id: 'compact-overview-demo',
+      name: '紧凑概览演示项目',
+      summary: '验证概览页只保留状态条，详细阶段信息放入抽屉。',
+      health: 'warning',
+      currentStageId: 'pm-requirements',
+      currentStageName: 'PM requirements',
+      currentOwner: '项目经理',
+      openFollowupTaskCount: 1,
+      stageProgress: 1,
+      totalStages: 2,
+      stageConfirmations: {
+        'pm-requirements': {
+          missingItems: [{ id: 'metrics', title: '成功指标' }],
+        },
+      },
+      stageRiskRegister: {
+        'pm-requirements': {
+          potentialRisks: [{ title: '测试样本不足' }],
+          functionalGaps: [],
+        },
+      },
+      stages: [
+        {
+          id: 'pm-requirements',
+          name: 'PM requirements',
+          owner: '项目经理',
+          status: 'active',
+          description: '逐轮澄清需求。',
+          checklist: ['确认目标用户'],
+        },
+        {
+          id: 'development',
+          name: 'Development',
+          owner: '技术负责人',
+          status: 'queued',
+          description: '启动开发。',
+          checklist: ['生成任务包'],
+        },
+      ],
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="pm-requirements"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const focusPanel = screen.getByLabelText('项目状态条');
+    expect(screen.queryByLabelText('项目处理焦点')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('交付阶段')).not.toBeInTheDocument();
+    expect(focusPanel).toBeInTheDocument();
+    expect(within(focusPanel).getByText('当前视图：概览')).toBeInTheDocument();
+    expect(within(focusPanel).getByText('进度 50%')).toBeInTheDocument();
+    expect(screen.queryByLabelText('当前阶段行动条')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('项目概览状态条')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('交付焦点摘要')).not.toBeInTheDocument();
+
+    expect(screen.queryByLabelText('阶段详情抽屉')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('阶段交付详情')).not.toBeInTheDocument();
+
+    fireEvent.click(within(focusPanel).getByRole('button', { name: '查看阶段详情' }));
+    expect(screen.getByLabelText('阶段交付详情')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '收起阶段详情' })).toBeInTheDocument();
+  });
+
+  test('collapses long project summaries in the workspace header', () => {
+    const longSummary =
+      '这个项目用于验证摄像头 RTSP 接入、YOLO 行人检测、网页标注框展示、误检率统计、测试证据归档和运维交接要求，完整说明会比较长，默认不应该把项目首屏撑高。';
+    const project = {
+      id: 'summary-demo',
+      name: '长概要演示项目',
+      summary: longSummary,
+      health: 'on-track',
+      currentStageId: 'pm-requirements',
+      currentOwner: '项目经理',
+      stageProgress: 1,
+      totalStages: 1,
+      stages: [
+        {
+          id: 'pm-requirements',
+          name: 'PM requirements',
+          owner: '项目经理',
+          status: 'active',
+          description: '逐轮澄清需求。',
+          checklist: ['确认目标用户'],
+        },
+      ],
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="pm-requirements"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const summaryDetails = screen.getByLabelText('项目概要');
+    expect(summaryDetails.tagName).toBe('DETAILS');
+    expect(summaryDetails).not.toHaveAttribute('open');
+    expect(within(summaryDetails).getByText('项目概要')).toBeVisible();
+    expect(within(summaryDetails).getByText('这个项目用于验证摄像头 RTSP 接入、YOLO 行人检测、网页标注框展示...')).toBeVisible();
+    expect(within(summaryDetails).getByText(longSummary)).not.toBeVisible();
+    fireEvent.click(within(summaryDetails).getByText('项目概要'));
+    expect(summaryDetails).toHaveAttribute('open');
+    expect(within(summaryDetails).getByText(longSummary)).toBeVisible();
+  });
+});

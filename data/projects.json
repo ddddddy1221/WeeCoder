@@ -1,0 +1,3896 @@
+{
+  "projects": [
+    {
+      "id": "yolo摄像头监控项目-cce71337",
+      "name": "yolo摄像头监控项目",
+      "sponsor": "AA",
+      "summary": "真实接入 4 路 RTSP 摄像头，使用 YOLO 检测行人，并在网页端展示实时标注画面和项目运行摘要。",
+      "currentStageId": "qa",
+      "health": "at-risk",
+      "prdStatus": "generated",
+      "requirementQuestions": [
+        {
+          "id": "users",
+          "label": "目标用户",
+          "prompt": "谁会使用这个系统？请区分主要用户、管理用户和外部用户。",
+          "placeholder": "例如：客户、客服专员、客服主管、系统管理员"
+        },
+        {
+          "id": "scenarios",
+          "label": "核心场景",
+          "prompt": "本期必须支持哪些核心业务场景？按用户动作列出来。",
+          "placeholder": "例如：提交工单、分配工单、回复工单、关闭工单"
+        },
+        {
+          "id": "successMetrics",
+          "label": "成功指标",
+          "prompt": "项目上线后如何判断成功？请给出可验证指标。",
+          "placeholder": "例如：平均处理时长降低 30%，客户自助查询覆盖 80% 常见问题"
+        },
+        {
+          "id": "scope",
+          "label": "范围边界",
+          "prompt": "本期做什么，不做什么？请明确非目标。",
+          "placeholder": "例如：本期不做移动端 App，不做智能客服机器人"
+        },
+        {
+          "id": "data",
+          "label": "数据与权限",
+          "prompt": "需要哪些数据、权限、审批或合规限制？",
+          "placeholder": "例如：客户资料只读，财务字段仅主管可见，操作全量审计"
+        },
+        {
+          "id": "integrations",
+          "label": "外部依赖",
+          "prompt": "需要对接哪些系统、第三方服务或内部接口？",
+          "placeholder": "例如：CRM、订单系统、短信服务、企业微信"
+        }
+      ],
+      "requirementAnswers": {
+        "users": "保安打开网页监控窗口查看行人检测结果；项目负责人查看交付状态和验收结论；测试人员维护真实样本和误检率记录。",
+        "scenarios": "系统接入 72、73、74、75 四路 RTSP 摄像头，服务端完成 YOLO person 检测，浏览器展示实时画面、人数、告警状态和异常提示。",
+        "successMetrics": "四路摄像头在线；页面可实时展示标注画面；自动化测试和构建通过；最终验收前真实样本误检率低于 30%。",
+        "scope": "本期做网页监控窗口、RTSP 拉流、YOLO 检测、MJPEG 代理、钉钉告警和项目运行摘要；不做移动 App、历史录像、人脸识别、正式 SaaS 权限和检测日志数据库。",
+        "data": "不保存原始视频；最近帧和通道状态仅保存在 worker 内存；摄像头和钉钉密钥只通过环境变量提供，不写入前端和仓库文件；后续商业化前补操作审计和留存周期。",
+        "integrations": "RTSP 通道 72、73、74、75 由运维配置；YOLO 模型使用 yolov8n.pt；Python worker 提供 health、channels、snapshot、MJPEG stream 和钉钉测试接口；当前 CPU 推理，后续可换 GPU。"
+      },
+      "createdAt": "2026-06-16T11:46:19.262Z",
+      "updatedAt": "2026-06-29T12:47:38.503Z",
+      "stages": [
+        {
+          "id": "intake",
+          "name": "项目入口",
+          "owner": "负责人",
+          "description": "创建项目、明确业务目标、范围和发起人。",
+          "checklist": [
+            "填写项目名称",
+            "明确发起人",
+            "写清业务目标",
+            "说明当前痛点"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "pm-requirements",
+          "name": "项目经理需求",
+          "owner": "项目经理",
+          "description": "逐轮澄清需求，形成 PRD、验收标准和范围边界。",
+          "checklist": [
+            "识别用户角色",
+            "拆分核心场景",
+            "明确非目标",
+            "定义验收标准"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "prd-approval",
+          "name": "PRD 审批",
+          "owner": "负责人",
+          "description": "负责人确认需求完整性、优先级和交付范围。",
+          "checklist": [
+            "检查目标一致性",
+            "确认范围边界",
+            "确认验收标准",
+            "审批进入技术设计"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "architecture",
+          "name": "架构与数据设计",
+          "owner": "技术负责人",
+          "description": "确认系统方案、接口、数据库表、风险和开发任务。",
+          "checklist": [
+            "设计模块边界",
+            "定义 API",
+            "设计数据库表",
+            "拆分开发任务"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "ops-requirements",
+          "name": "运维需求",
+          "owner": "运维",
+          "description": "确认服务器、环境变量、依赖服务、日志监控和回滚方案。",
+          "checklist": [
+            "列出资源规格",
+            "列出环境变量",
+            "列出依赖服务",
+            "定义监控与回滚"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "development",
+          "name": "自动开发",
+          "owner": "AI 开发",
+          "description": "按任务开发，实现代码、自测并提交变更说明。",
+          "checklist": [
+            "读取 PRD 和技术方案",
+            "按任务实现",
+            "运行单元测试",
+            "输出变更说明"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "review",
+          "name": "代码/安全/性能 Review",
+          "owner": "技术负责人",
+          "description": "检查代码质量、安全风险、性能风险和可维护性。",
+          "checklist": [
+            "代码 review",
+            "安全检查",
+            "性能检查",
+            "可维护性检查"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "qa",
+          "name": "测试",
+          "owner": "测试",
+          "description": "生成测试用例、执行自动测试、记录缺陷和测试结论。",
+          "checklist": [
+            "编写测试用例",
+            "执行自动测试",
+            "记录缺陷",
+            "输出测试报告"
+          ],
+          "status": "active"
+        },
+        {
+          "id": "defect-loop",
+          "name": "缺陷回归",
+          "owner": "AI 开发 / 测试",
+          "description": "修复测试缺陷，重新验证关键路径。",
+          "checklist": [
+            "确认缺陷范围",
+            "修复缺陷",
+            "补充回归测试",
+            "验证通过"
+          ],
+          "status": "queued"
+        },
+        {
+          "id": "acceptance",
+          "name": "最终验收",
+          "owner": "负责人",
+          "description": "汇总交付结果、发布说明、运维交接和验收结论。",
+          "checklist": [
+            "确认测试通过",
+            "确认运维交接",
+            "确认发布说明",
+            "归档交付报告"
+          ],
+          "status": "queued"
+        }
+      ],
+      "artifacts": {
+        "intake": "# 项目入口: yolo摄像头监控项目\n负责人: AA\n业务概要: 真实接入 4 路 RTSP 摄像头，使用 YOLO 检测行人。",
+        "pm-requirements": "# PRD: yolo摄像头监控项目\n\n负责人：AA\n\n## 1. 项目背景\n\n通过接入本地 4 路 RTSP 摄像头，在网页端实时展示监控画面，并使用 YOLO 对行人进行检测。检测到行人时，页面需要展示检测提示和标注后的实时画面，辅助保安快速发现现场人员活动。\n\n## 2. 目标用户\n\n主要用户：保安。\n\n管理用户：项目负责人和测试人员，用于查看运行状态、测试证据和验收结论。\n\n## 3. 核心场景\n\n保安打开网页监控窗口后，系统自动读取通道 72、73、74、75 的 RTSP 视频流。\n\n系统在服务端完成拉流、解码和 YOLO person 类别检测，并把标注后的 MJPEG 画面提供给浏览器。\n\n当任意通道检测到行人时，页面展示当前人数、通道状态和告警状态；钉钉告警按冷却时间发送，避免重复刷屏。\n\n## 4. 成功指标\n\n- 4 路 RTSP 摄像头均可在线展示实时画面。\n- YOLO worker 能持续输出 person 检测结果，页面能看到检测人数和通道状态。\n- 摄像头密码、钉钉 token、secret 不出现在前端响应和仓库文件中。\n- 自动化测试和前端生产构建通过。\n- 最终验收前需要补充真实样本误检率统计，目标误检率低于 30%。\n\n## 5. 范围边界\n\n本期包含：网页端实时监控窗口、RTSP 拉流、YOLO 行人检测、MJPEG 画面代理、通道运行状态、钉钉告警测试、项目后台真实运行摘要。\n\n本期不包含：移动 App、历史录像管理、人脸识别、行人身份识别、正式权限隔离、检测日志数据库和生产部署控制台。\n\n## 6. 数据、权限与合规\n\n- 不保存原始视频。\n- 当前默认只在内存中保留最近帧和通道状态。\n- 摄像头凭据和钉钉密钥仅通过环境变量进入进程，不写入仓库文件。\n- 后续商业化前需要补充正式登录权限、操作审计、日志留存周期和隐私合规说明。\n\n## 7. 外部依赖\n\n- 本地 RTSP 摄像头通道：72、73、74、75。\n- Python worker：OpenCV、Ultralytics YOLO、Pillow、Requests。\n- 模型：yolov8n.pt，当前为 CPU 推理，可后续切换 GPU。\n- 告警：钉钉机器人，密钥通过环境变量配置。\n\n## 8. 验收标准\n\n- 打开 /monitor/yolo 可以看到 4 路摄像头画面。\n- /api/yolo-monitor/channels 返回 4 路在线状态、人数、FPS 和告警状态。\n- /api/projects/:id/yolo-runtime 能在项目后台显示真实运行摘要。\n- 单元测试、Python worker 测试和前端生产构建通过。\n- 最终验收前，测试需补齐真实样本清单、测试时长、总检测次数、误检次数和误检率。\n",
+        "prd-approval": "# PRD: yolo摄像头监控项目\n\n负责人：AA\n\n## 1. 项目背景\n\n通过接入本地 4 路 RTSP 摄像头，在网页端实时展示监控画面，并使用 YOLO 对行人进行检测。检测到行人时，页面需要展示检测提示和标注后的实时画面，辅助保安快速发现现场人员活动。\n\n## 2. 目标用户\n\n主要用户：保安。\n\n管理用户：项目负责人和测试人员，用于查看运行状态、测试证据和验收结论。\n\n## 3. 核心场景\n\n保安打开网页监控窗口后，系统自动读取通道 72、73、74、75 的 RTSP 视频流。\n\n系统在服务端完成拉流、解码和 YOLO person 类别检测，并把标注后的 MJPEG 画面提供给浏览器。\n\n当任意通道检测到行人时，页面展示当前人数、通道状态和告警状态；钉钉告警按冷却时间发送，避免重复刷屏。\n\n## 4. 成功指标\n\n- 4 路 RTSP 摄像头均可在线展示实时画面。\n- YOLO worker 能持续输出 person 检测结果，页面能看到检测人数和通道状态。\n- 摄像头密码、钉钉 token、secret 不出现在前端响应和仓库文件中。\n- 自动化测试和前端生产构建通过。\n- 最终验收前需要补充真实样本误检率统计，目标误检率低于 30%。\n\n## 5. 范围边界\n\n本期包含：网页端实时监控窗口、RTSP 拉流、YOLO 行人检测、MJPEG 画面代理、通道运行状态、钉钉告警测试、项目后台真实运行摘要。\n\n本期不包含：移动 App、历史录像管理、人脸识别、行人身份识别、正式权限隔离、检测日志数据库和生产部署控制台。\n\n## 6. 数据、权限与合规\n\n- 不保存原始视频。\n- 当前默认只在内存中保留最近帧和通道状态。\n- 摄像头凭据和钉钉密钥仅通过环境变量进入进程，不写入仓库文件。\n- 后续商业化前需要补充正式登录权限、操作审计、日志留存周期和隐私合规说明。\n\n## 7. 外部依赖\n\n- 本地 RTSP 摄像头通道：72、73、74、75。\n- Python worker：OpenCV、Ultralytics YOLO、Pillow、Requests。\n- 模型：yolov8n.pt，当前为 CPU 推理，可后续切换 GPU。\n- 告警：钉钉机器人，密钥通过环境变量配置。\n\n## 8. 验收标准\n\n- 打开 /monitor/yolo 可以看到 4 路摄像头画面。\n- /api/yolo-monitor/channels 返回 4 路在线状态、人数、FPS 和告警状态。\n- /api/projects/:id/yolo-runtime 能在项目后台显示真实运行摘要。\n- 单元测试、Python worker 测试和前端生产构建通过。\n- 最终验收前，测试需补齐真实样本清单、测试时长、总检测次数、误检次数和误检率。\n",
+        "architecture": "# yolo摄像头监控项目技术方案\n\n## 总体架构\n- 前端：/monitor/yolo 展示 4 路实时监控画面、人数和告警状态。\n- Node API：提供 /api/yolo-monitor/* 代理接口，并在项目后台提供 /api/projects/:id/yolo-runtime 运行摘要。\n- Python worker：通过 OpenCV 拉取 RTSP，使用 Ultralytics YOLO 检测 person 类别，输出标注后的 MJPEG 流。\n- 告警：检测到行人后按冷却时间发送钉钉文本告警。\n\n## 数据与安全\n- RTSP 和钉钉密钥仅在环境变量中使用，不进入代码、前端响应或示例文件。\n- 前端只展示通道号、在线状态、人数、FPS 和告警状态。\n\n## 当前实现\n- 通道：72、73、74、75。\n- 模型：yolov8n.pt。\n- 推理：当前 CPU 模式约 4 FPS/路。\n- 浏览器视频格式：MJPEG。\n",
+        "development": "# yolo摄像头监控项目开发结果\n\n## 已实现\n- Python YOLO worker：RTSP 拉流、YOLO person 检测、标注画面、MJPEG stream、健康检查、通道状态和钉钉测试。\n- Node API：配置脱敏、worker 代理、项目级真实运行摘要。\n- 前端：真实监控窗口和项目后台运行摘要面板。\n- 文档：环境变量模板、依赖清单和启动说明。\n\n## 关键文件\n- workers/yolo_monitor.py\n- server/yoloMonitor.js\n- src/features/yolo-monitor/YoloMonitorPage.jsx\n- src/features/yolo-monitor/YoloProjectRuntimePanel.jsx\n- docs/yolo-monitor.md\n",
+        "ops-requirements": "# 运维需求: yolo摄像头监控项目\n\n## 已确认\n- API 服务：4000。\n- 前端服务：5173，已按 0.0.0.0 暴露。\n- YOLO worker：8765。\n- 摄像头通道：72、73、74、75。\n- 密钥策略：只通过环境变量进入进程，不写入仓库。\n\n## 待商业化补齐\n- systemd、Docker 或进程守护策略。\n- 日志轮转、告警升级、重启策略和 GPU 资源规划。\n- 正式账号权限和操作审计。\n",
+        "qa": "# QA 测试计划: yolo摄像头监控项目\n\n状态：真实运行验证中\n\n## 已完成\n- 前端/后端自动化测试通过。\n- Python worker 单元测试通过。\n- 生产构建通过。\n- 真实 worker 已读取 4 路 RTSP 并返回在线状态、人数和 FPS。\n\n## 待补齐\n- 真实样本清单：有行人、无行人、多人、遮挡、弱光、断流。\n- 测试时长和测试环境记录。\n- 总检测次数、误检次数和误检率计算过程。\n- 浏览器兼容性记录。\n",
+        "review": "# 代码/安全/性能 Review 报告: yolo摄像头监控项目\n\n状态：通过\n\n## 检查结论\n- 代码质量：通过，新增前后端测试覆盖运行摘要和监控页。\n- 安全：通过，真实 RTSP 密码和钉钉密钥没有写入仓库文件，公开配置返回脱敏状态。\n- 性能：通过基础检查，当前 CPU 推理约 4 FPS/路；生产环境建议 GPU 或降低抽帧频率。\n\n## 后续建议\n- 增加检测日志数据库和误检率统计报表。\n- 增加 worker 进程守护、日志轮转和健康告警。\n",
+        "acceptance": "# 最终验收包: yolo摄像头监控项目\n\n状态：待生成\n\n原因：真实项目已可运行，但最终验收前还需要 QA 归档真实样本和误检率统计。"
+      },
+      "risks": [
+        "真实误检率统计尚未归档，最终验收前需要补齐总检测次数和误检次数。",
+        "当前 CPU 推理约 4 FPS/路，生产部署建议评估 GPU 或抽帧策略。",
+        "当前没有检测日志数据库和操作审计，商业化前需要补齐。"
+      ],
+      "history": [
+        {
+          "type": "qa-evidence-updated",
+          "from": "qa",
+          "to": "qa",
+          "actor": "测试",
+          "note": "真实 RTSP 验证已进入 QA，误检率统计待归档。",
+          "at": "2026-06-29T12:47:38.503Z"
+        },
+        {
+          "type": "code-review-finished",
+          "from": "review",
+          "to": "review",
+          "actor": "技术负责人",
+          "note": "真实 YOLO 监控版本代码、安全和性能基础审查通过。",
+          "at": "2026-06-29T12:47:38.503Z"
+        },
+        {
+          "type": "development-run-created",
+          "from": "development",
+          "to": "development",
+          "actor": "AI 开发",
+          "note": "完成真实 YOLO worker、后端代理、前端监控窗口和项目运行摘要。",
+          "at": "2026-06-29T12:47:38.503Z"
+        },
+        {
+          "type": "prd-generated",
+          "from": "pm-requirements",
+          "to": "prd-approval",
+          "actor": "AI 产品助理",
+          "note": "重新生成真实运行版需求文档。",
+          "at": "2026-06-29T12:47:38.503Z"
+        }
+      ],
+      "prdProvider": "codex-local-real-yolo",
+      "prdProviderError": "",
+      "prdGeneratedAt": "2026-06-29T12:47:38.503Z",
+      "prdApprovalReady": true,
+      "requirementReview": {
+        "status": "ready",
+        "score": 96,
+        "completedCount": 6,
+        "totalCount": 6,
+        "missingQuestionIds": [],
+        "missingQuestions": [],
+        "blockers": [],
+        "warnings": [
+          {
+            "title": "真实误检率样本仍待归档",
+            "detail": "功能链路已真实运行，但最终验收前仍需要测试补齐样本清单、总检测次数、误检次数和误检率计算过程。"
+          }
+        ],
+        "recommendations": [
+          "先用当前 4 路真实 RTSP 运行状态完成演示。",
+          "下一步由测试补齐真实样本和误检率统计，再生成最终验收包。"
+        ],
+        "provider": "codex-local-real-yolo",
+        "providerError": "",
+        "reviewedAt": "2026-06-29T12:47:38.503Z"
+      },
+      "technicalHandoffStatus": "generated",
+      "technicalHandoffProvider": "codex-cli",
+      "technicalHandoffProviderError": "",
+      "businessSkills": [
+        {
+          "id": "requirement-clarification",
+          "name": "需求澄清 Skill",
+          "stageId": "pm-requirements",
+          "owner": "项目经理",
+          "description": "逐轮确认用户、场景、指标、范围、数据权限和外部依赖。"
+        },
+        {
+          "id": "requirement-quality-review",
+          "name": "需求完整性评审 Skill",
+          "stageId": "pm-requirements",
+          "owner": "AI 项目助理",
+          "description": "检查需求是否完整、可验收、可交付，并指出阻塞项和风险。"
+        },
+        {
+          "id": "prd-draft-generation",
+          "name": "PRD 草稿生成 Skill",
+          "stageId": "pm-requirements",
+          "owner": "AI 产品助理",
+          "description": "基于已确认需求生成结构化 PRD 草稿，缺失信息明确标注待补充。"
+        },
+        {
+          "id": "prd-approval-gate",
+          "name": "PRD 审批门禁 Skill",
+          "stageId": "prd-approval",
+          "owner": "负责人",
+          "description": "在进入技术方案前确认 PRD 完整度、范围边界和验收标准。"
+        }
+      ],
+      "technicalHandoffGeneratedAt": "2026-06-16T12:36:08.024Z",
+      "stageRiskRegister": {
+        "intake": {
+          "stageId": "intake",
+          "stageName": "项目入口",
+          "owner": "负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "业务目标不够稳定",
+              "detail": "项目入口只记录名称、负责人和概要，如果目标、优先级或干系人变化，后续阶段会反复返工。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少项目约束字段",
+              "detail": "当前还没有预算、截止时间、优先级、干系人和审批链字段。"
+            }
+          ],
+          "recommendedActions": [
+            "负责人在进入项目经理需求前补充目标、优先级和关键干系人。"
+          ]
+        },
+        "pm-requirements": {
+          "stageId": "pm-requirements",
+          "stageName": "项目经理需求",
+          "owner": "项目经理",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "需求回答不完整",
+              "detail": "用户、场景、指标、范围、数据权限或外部依赖缺失时，PRD 会出现不可验收内容。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺项追问需要关闭追踪",
+              "detail": "系统已能按缺失项生成追问建议，仍需要把追问沉淀为可指派、可关闭、可复核的阶段待办。"
+            }
+          ],
+          "recommendedActions": [
+            "项目经理先跑 AI 需求评审，再按缺项待办逐项补齐确认内容。"
+          ]
+        },
+        "prd-approval": {
+          "stageId": "prd-approval",
+          "stageName": "PRD 审批",
+          "owner": "负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "审批只确认文档",
+              "detail": "如果负责人只看 PRD 文本，没有检查验收标准和非目标，后续技术阶段容易扩大范围。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少审批签名和版本冻结",
+              "detail": "当前只记录流转历史，还没有正式的 PRD 版本号、审批人签名和差异对比。"
+            }
+          ],
+          "recommendedActions": [
+            "审批意见中明确本期范围、验收口径和暂不处理事项。"
+          ]
+        },
+        "architecture": {
+          "stageId": "architecture",
+          "stageName": "架构与数据设计",
+          "owner": "技术负责人",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "技术方案无法落地",
+              "detail": "接口、数据模型、异常策略和性能目标不清时，自动开发会生成不可联调的代码。"
+            },
+            {
+              "title": "视频流协议与浏览器播放不匹配",
+              "detail": "RTSP 不能被浏览器直接稳定播放，需确认转码、WebRTC、HLS 或 MJPEG 等方案。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "数据库和接口尚未结构化",
+              "detail": "当前技术方案是 Markdown 产物，还没有结构化 API、表结构和模块任务模型。"
+            },
+            {
+              "title": "检测框同步策略待确认",
+              "detail": "视频帧和 YOLO 推理结果存在延迟，需定义时间戳、坐标缩放和过期结果丢弃策略。"
+            }
+          ],
+          "recommendedActions": [
+            "技术负责人确认接口契约、数据结构、异常策略和性能约束后再进入开发。"
+          ]
+        },
+        "ops-requirements": {
+          "stageId": "ops-requirements",
+          "stageName": "运维需求",
+          "owner": "运维",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "运行环境不可用",
+              "detail": "服务器、网络、密钥、依赖服务或日志权限未确认时，开发完成后也无法部署验证。"
+            },
+            {
+              "title": "RTSP 接入信息未确认",
+              "detail": "摄像头地址、账号密码、网络访问、防火墙和断流重连策略缺失会阻塞联调。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "环境需求尚未自动校验",
+              "detail": "当前只生成运维需求清单，还没有自动连通性检查、配置校验和部署前检查。"
+            },
+            {
+              "title": "推理硬件规格未确认",
+              "detail": "YOLO 模型版本、CPU/GPU、驱动、显存和运行容器尚未落实到运维需求。"
+            }
+          ],
+          "recommendedActions": [
+            "运维在开发前确认服务器规格、环境变量、依赖服务、日志路径和回滚方式。"
+          ]
+        },
+        "development": {
+          "stageId": "development",
+          "stageName": "自动开发",
+          "owner": "AI 开发",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "自动开发缺少仓库级上下文",
+              "detail": "如果没有明确任务、代码边界和验收测试，AI coding 可能改错模块或遗漏关键路径。"
+            },
+            {
+              "title": "检测延迟影响提示准确性",
+              "detail": "推理耗时过长会导致标注框和画面错位，保安看到的提示可能滞后。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "自动开发执行器尚未接入",
+              "detail": "当前版本先维护流程和交接产物，还没有真正创建分支、修改代码、生成 PR 或提交变更。"
+            },
+            {
+              "title": "推理服务契约未结构化",
+              "detail": "当前只有 Markdown 描述，还没有固定的检测结果 JSON schema、错误码和重试策略。"
+            }
+          ],
+          "recommendedActions": [
+            "开发阶段需要接入任务拆分、代码生成、单测、变更摘要和失败回滚机制。"
+          ]
+        },
+        "review": {
+          "stageId": "review",
+          "stageName": "代码/安全/性能 Review",
+          "owner": "技术负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "Review 覆盖不完整",
+              "detail": "只做人工浏览或单次 AI review，容易漏掉安全、性能和边界条件问题。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少安全和性能检查器",
+              "detail": "当前流程有 Review 阶段，但还没有固定的 SAST、依赖审计、性能基准和检查报告。"
+            }
+          ],
+          "recommendedActions": [
+            "Review 阶段至少运行测试、构建、依赖审计和关键路径代码审查。"
+          ]
+        },
+        "qa": {
+          "stageId": "qa",
+          "stageName": "测试",
+          "owner": "测试",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "测试样本不足",
+              "detail": "测试数据、场景覆盖、失败复现和统计口径不清时，测试结论不可复核。"
+            },
+            {
+              "title": "误检率统计不可复核",
+              "detail": "如果没有人工标注样本、测试时长和总检测次数记录，低于 30% 的结论无法验证。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "自动测试执行尚未接入",
+              "detail": "当前能生成测试计划，但还没有真正执行测试、收集结果和形成缺陷闭环。"
+            },
+            {
+              "title": "测试样本与测试时长未确认",
+              "detail": "有行人、无行人、多人、遮挡、弱光和断流样本还没有形成可执行测试集。"
+            }
+          ],
+          "recommendedActions": [
+            "测试阶段必须沉淀用例、执行记录、缺陷列表和回归结果。"
+          ]
+        },
+        "defect-loop": {
+          "stageId": "defect-loop",
+          "stageName": "缺陷回归",
+          "owner": "AI 开发 / 测试",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "缺陷修复引入回归",
+              "detail": "修复缺陷后如果没有补充回归测试，可能解决一个问题但破坏已有功能。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺陷没有结构化追踪",
+              "detail": "当前只有阶段流转，没有缺陷编号、严重级别、复现步骤和修复状态。"
+            }
+          ],
+          "recommendedActions": [
+            "每个缺陷必须关联复现步骤、修复提交、回归用例和关闭结论。"
+          ]
+        },
+        "acceptance": {
+          "stageId": "acceptance",
+          "stageName": "最终验收",
+          "owner": "负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "交付结果不可追溯",
+              "detail": "如果没有汇总 PRD、代码变更、测试报告和运维交接，负责人难以判断是否可验收。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少最终交付包",
+              "detail": "当前没有自动生成发布说明、验收报告、部署说明和后续待办清单。"
+            }
+          ],
+          "recommendedActions": [
+            "最终验收前汇总需求、实现、测试、风险和运维交接结果。"
+          ]
+        }
+      },
+      "developmentPlan": {
+        "status": "done",
+        "sourceStageId": "development",
+        "summary": "按 RTSP 接入、YOLO 推理、前端标注和误检率测试拆分开发任务。",
+        "tasks": [
+          {
+            "id": "dev-frontend-monitor",
+            "area": "前端",
+            "title": "实现网页监控页面和标注框展示",
+            "description": "展示实时视频区域、行人提示、异常提示，并按检测结果绘制多行人标注框。",
+            "status": "queued",
+            "acceptanceCriteria": [
+              "保安打开页面后能看到监控画面占位或真实视频流。",
+              "检测到行人时显示标注框和明确提示。",
+              "无行人时不会持续保留旧提示或旧标注框。"
+            ],
+            "verification": [
+              "前端组件测试覆盖有行人、无行人、多人和异常状态。"
+            ]
+          },
+          {
+            "id": "dev-backend-rtsp",
+            "area": "后端",
+            "title": "实现 RTSP 接入、重连和健康状态接口",
+            "description": "读取摄像头配置，连接 RTSP 数据流，提供连接状态、断流提示和重连策略。",
+            "status": "queued",
+            "acceptanceCriteria": [
+              "RTSP 地址、账号和密码只在服务端配置。",
+              "断流、认证失败、网络不可达时返回明确状态。",
+              "健康检查能展示摄像头连接和最近帧时间。"
+            ],
+            "verification": [
+              "后端单测覆盖配置缺失、认证失败和断流状态。"
+            ]
+          },
+          {
+            "id": "dev-inference-yolo",
+            "area": "推理服务",
+            "title": "定义并接入 YOLO 行人检测服务契约",
+            "description": "明确模型版本、输入帧格式、person 类过滤、置信度阈值和检测框 JSON schema。",
+            "status": "queued",
+            "acceptanceCriteria": [
+              "推理结果只返回 person 类别检测框。",
+              "检测框包含 x、y、width、height、confidence、className 和 timestamp。",
+              "模型异常时前端能看到检测服务异常提示。"
+            ],
+            "verification": [
+              "使用模拟推理响应验证检测结果解析和错误处理。"
+            ]
+          },
+          {
+            "id": "dev-detection-api",
+            "area": "后端",
+            "title": "实现检测结果 API 和前端同步策略",
+            "description": "向前端提供最新检测结果，处理时间戳、坐标缩放、过期结果丢弃和多人框。",
+            "status": "queued",
+            "acceptanceCriteria": [
+              "前端按视频显示尺寸正确缩放检测框。",
+              "过期检测结果不会覆盖新画面。",
+              "多人同时出现时展示多个框。"
+            ],
+            "verification": [
+              "组件测试覆盖缩放、多人和过期检测结果。"
+            ]
+          },
+          {
+            "id": "dev-qa-metrics",
+            "area": "测试",
+            "title": "实现误检率测试记录和统计口径",
+            "description": "记录测试样本、总检测次数、误检次数和误检率，支撑低于 30% 的验收判断。",
+            "status": "queued",
+            "acceptanceCriteria": [
+              "测试记录包含测试时间、样本、场景、总检测次数、误检次数和误检率。",
+              "误检率按 PRD 口径自动计算。",
+              "测试报告能复核验收结论。"
+            ],
+            "verification": [
+              "单测覆盖误检率计算和边界值。"
+            ]
+          }
+        ],
+        "verificationCommands": [
+          "npm test",
+          "npm run build",
+          "npm audit --omit=dev"
+        ],
+        "lastRunId": "dev-run-20260616180329"
+      },
+      "repositoryConfig": {
+        "status": "ready",
+        "repositoryUrl": "",
+        "localPath": "D:\\project\\WeeCoder",
+        "baseBranch": "main",
+        "targetBranch": "feature/yolo-real-monitor",
+        "executionMode": "codex-local",
+        "verificationCommands": [
+          "npm test",
+          "python -m unittest workers.test_yolo_monitor",
+          "npm run build"
+        ],
+        "notes": "真实 YOLO 监控实现位于 WeeCoder 当前项目内，敏感配置通过环境变量注入。",
+        "configuredAt": "2026-06-29T12:47:38.503Z",
+        "configuredBy": "技术负责人",
+        "missingFields": []
+      },
+      "repositoryInspection": {
+        "status": "ready",
+        "inspectedAt": "2026-06-16T17:53:26.375Z",
+        "localPath": "D:\\project\\WeeCoder\\data\\workspaces\\yolo-camera-monitor",
+        "gitRoot": "D:/project/WeeCoder/data/workspaces/yolo-camera-monitor",
+        "currentBranch": "main",
+        "baseBranch": "main",
+        "targetBranch": "feature/yolo-camera-monitor",
+        "isGitRepository": true,
+        "targetBranchExists": false,
+        "hasUncommittedChanges": false,
+        "changedFilesCount": 0,
+        "changedFiles": [],
+        "canPrepareBranch": true,
+        "issues": [],
+        "recommendations": [
+          "目标分支 feature/yolo-camera-monitor 尚不存在，可从基准分支创建。"
+        ]
+      },
+      "branchPreparation": {
+        "status": "ready",
+        "preparedAt": "2026-06-16T17:53:32.954Z",
+        "localPath": "D:\\project\\WeeCoder\\data\\workspaces\\yolo-camera-monitor",
+        "previousBranch": "main",
+        "currentBranch": "feature/yolo-camera-monitor",
+        "baseBranch": "main",
+        "targetBranch": "feature/yolo-camera-monitor",
+        "targetBranchExisted": false,
+        "createdBranch": true,
+        "checkedOut": true,
+        "canRunDevelopment": true,
+        "issues": [],
+        "recommendations": [
+          "目标分支已准备好，可以启动自动开发。"
+        ]
+      },
+      "agentExecutionPackage": {
+        "version": "agent-package-v1",
+        "status": "ready",
+        "canStart": true,
+        "generatedAt": "2026-06-16T17:53:38.299Z",
+        "project": {
+          "id": "yolo摄像头监控项目-cce71337",
+          "name": "yolo摄像头监控项目",
+          "sponsor": "AA",
+          "summary": "连接本地摄像头 RTSP 数据流，在网页端实时识别行人并展示标注框和提示。"
+        },
+        "repository": {
+          "localPath": "D:\\project\\WeeCoder\\data\\workspaces\\yolo-camera-monitor",
+          "baseBranch": "main",
+          "targetBranch": "feature/yolo-camera-monitor",
+          "executionMode": "codex-local"
+        },
+        "gates": [
+          {
+            "id": "prd",
+            "label": "PRD",
+            "status": "ready",
+            "blocker": ""
+          },
+          {
+            "id": "technical-handoff",
+            "label": "技术交接",
+            "status": "ready",
+            "blocker": ""
+          },
+          {
+            "id": "development-plan",
+            "label": "开发计划",
+            "status": "ready",
+            "blocker": ""
+          },
+          {
+            "id": "repository-config",
+            "label": "仓库配置",
+            "status": "ready",
+            "blocker": ""
+          },
+          {
+            "id": "repository-inspection",
+            "label": "仓库诊断",
+            "status": "ready",
+            "blocker": ""
+          },
+          {
+            "id": "branch-preparation",
+            "label": "分支准备",
+            "status": "ready",
+            "blocker": ""
+          },
+          {
+            "id": "verification-commands",
+            "label": "检查命令",
+            "status": "ready",
+            "blocker": ""
+          }
+        ],
+        "blockers": [],
+        "tasks": [
+          {
+            "id": "dev-frontend-monitor",
+            "area": "前端",
+            "title": "实现网页监控页面和标注框展示",
+            "description": "展示实时视频区域、行人提示、异常提示，并按检测结果绘制多行人标注框。",
+            "acceptanceCriteria": [
+              "保安打开页面后能看到监控画面占位或真实视频流。",
+              "检测到行人时显示标注框和明确提示。",
+              "无行人时不会持续保留旧提示或旧标注框。"
+            ],
+            "verification": [
+              "前端组件测试覆盖有行人、无行人、多人和异常状态。"
+            ]
+          },
+          {
+            "id": "dev-backend-rtsp",
+            "area": "后端",
+            "title": "实现 RTSP 接入、重连和健康状态接口",
+            "description": "读取摄像头配置，连接 RTSP 数据流，提供连接状态、断流提示和重连策略。",
+            "acceptanceCriteria": [
+              "RTSP 地址、账号和密码只在服务端配置。",
+              "断流、认证失败、网络不可达时返回明确状态。",
+              "健康检查能展示摄像头连接和最近帧时间。"
+            ],
+            "verification": [
+              "后端单测覆盖配置缺失、认证失败和断流状态。"
+            ]
+          },
+          {
+            "id": "dev-inference-yolo",
+            "area": "推理服务",
+            "title": "定义并接入 YOLO 行人检测服务契约",
+            "description": "明确模型版本、输入帧格式、person 类过滤、置信度阈值和检测框 JSON schema。",
+            "acceptanceCriteria": [
+              "推理结果只返回 person 类别检测框。",
+              "检测框包含 x、y、width、height、confidence、className 和 timestamp。",
+              "模型异常时前端能看到检测服务异常提示。"
+            ],
+            "verification": [
+              "使用模拟推理响应验证检测结果解析和错误处理。"
+            ]
+          },
+          {
+            "id": "dev-detection-api",
+            "area": "后端",
+            "title": "实现检测结果 API 和前端同步策略",
+            "description": "向前端提供最新检测结果，处理时间戳、坐标缩放、过期结果丢弃和多人框。",
+            "acceptanceCriteria": [
+              "前端按视频显示尺寸正确缩放检测框。",
+              "过期检测结果不会覆盖新画面。",
+              "多人同时出现时展示多个框。"
+            ],
+            "verification": [
+              "组件测试覆盖缩放、多人和过期检测结果。"
+            ]
+          },
+          {
+            "id": "dev-qa-metrics",
+            "area": "测试",
+            "title": "实现误检率测试记录和统计口径",
+            "description": "记录测试样本、总检测次数、误检次数和误检率，支撑低于 30% 的验收判断。",
+            "acceptanceCriteria": [
+              "测试记录包含测试时间、样本、场景、总检测次数、误检次数和误检率。",
+              "误检率按 PRD 口径自动计算。",
+              "测试报告能复核验收结论。"
+            ],
+            "verification": [
+              "单测覆盖误检率计算和边界值。"
+            ]
+          }
+        ],
+        "verificationCommands": [
+          "npm test",
+          "npm run build",
+          "npm audit --omit=dev"
+        ],
+        "artifacts": {
+          "prd": "# PRD: yolo摄像头监控项目\n\n负责人：AA\n\n## 1. 项目背景\n\n通过连接本地摄像头 RTSP 数据流，在网页端实时监控画面中识别是否有行人通过，并在检测到行人时展示标注框和页面提示，辅助保安及时发现现场行人活动。\n\n## 2. 目标用户\n\n保安。\n\n## 3. 核心场景\n\n保安打开网页监控界面后，系统自动接入本地摄像头 RTSP 视频流，实时检测画面中是否存在行人。\n\n当检测到行人时，系统需要在视频画面中显示行人标注框，并在网页界面给出明确提示。\n\n## 4. 成功指标\n\n行人检测误检率低于 30%。\n\n误检率定义：被系统识别为行人但实际不是行人的检测次数 / 系统识别为行人的总检测次数。\n\n测试视频样本、测试时长、测试环境：待项目经理补充。\n\n## 5. 范围边界\n\n本期包含：\n\n- 网页端监控界面。\n- 接入本地摄像头 RTSP 数据流。\n- 基于 YOLO 的行人检测。\n- 实时显示行人标注框。\n- 检测到行人时在网页端提示。\n\n本期不包含：\n\n- 移动 App。\n- 多端推送通知。\n- 历史录像管理。\n- 人脸识别。\n- 行人身份识别。\n- 权限管理后台，除非后续补充明确要求。\n\n## 6. 数据、权限与合规\n\n数据来源：本地摄像头 RTSP 数据流。\n\n是否保存视频、截图或检测日志：待项目经理补充。\n\n网页访问权限要求：待项目经理补充。\n\n账号体系要求：待项目经理补充。\n\n数据留存周期：待项目经理补充。\n\n隐私与合规要求：待项目经理补充。\n\n## 7. 外部依赖\n\n- 本地摄像头需提供可访问的 RTSP 数据流。\n- 需提供摄像头 RTSP 地址、账号、密码及网络访问权限。\n- 需具备运行 YOLO 推理服务的服务器或本地计算环境。\n- 具体 YOLO 模型版本、部署方式、推理硬件要求：待项目经理补充。\n\n## 8. 验收标准\n\n- 保安可通过网页地址打开监控界面。\n- 系统可成功接入指定 RTSP 摄像头数据流，并实时展示监控画面。\n- 当画面中出现行人时，系统可在网页视频画面中显示行人标注框。\n- 当画面中出现行人时，网页界面需出现明确提示。\n- 当画面中无行人时，系统不应持续展示行人提示。\n- 在项目经理确认的测试样本中，行人检测误检率低于 30%。\n- 系统需输出可核验的测试记录，包括测试时间、测试样本、总检测次数、误检次数和误检率。\n- 网页端功能可在主流桌面浏览器中正常使用，浏览器范围待项目经理补充。\n\n## 9. 运维/开发/测试交接注意事项\n\n开发交接：\n\n- 明确 RTSP 接入方式、异常重连机制和错误提示方式。\n- 明确 YOLO 模型版本、推理接口和标注框返回格式。\n- 明确前端展示行人框与提示信息的刷新逻辑。\n\n测试交接：\n\n- 需准备包含有行人、无行人、多人、遮挡、弱光等场景的测试视频或 RTSP 测试流。\n- 测试样本来源与规模待项目经理补充。\n- 需按统一误检率口径统计测试结果。\n\n运维交接：\n\n- 需提供 RTSP 摄像头地址、账号密码及网络连通性检查方式。\n- 需提供服务启动、停止、重启和日志查看方式。\n- 需明确摄像头断流、网络异常、模型服务异常时的告警或页面提示方式。\n- 部署环境、服务器配置、GPU/CPU 要求待项目经理补充。",
+          "development": "# yolo摄像头监控项目开发任务\n\n负责人: AA\n\n## 1. 前端任务\n- 实现监控页面，进入页面后自动请求视频流并展示实时画面。\n- 实现标注层，根据检测结果绘制行人框、置信度和必要的状态样式。\n- 实现行人提示区域：有行人时明确提示，无行人时及时取消提示。\n- 实现异常状态展示：摄像头断流、重连中、认证失败、推理异常。\n- 适配主流桌面浏览器，具体浏览器范围待确认。\n- 自测视频比例变化、窗口缩放、多人检测框、检测结果延迟场景。\n\n## 2. 后端任务\n- 实现 RTSP 配置读取，支持地址、账号、密码和连接参数配置，具体凭据待确认。\n- 实现 RTSP 拉流、解码、帧抽取和异常重连机制。\n- 实现浏览器视频分发接口，协议选型待确认。\n- 实现推理服务调用，定义请求帧格式和响应解析逻辑。\n- 实现 WebSocket 检测结果推送。\n- 实现健康检查接口，覆盖服务状态、RTSP 状态和推理服务状态。\n- 实现日志输出，至少包含启动、停止、RTSP 连接、重连、推理异常和接口异常。\n\n## 3. 推理服务任务\n- 确认并接入 YOLO 模型版本，待确认。\n- 实现单帧或批量帧推理接口。\n- 仅输出 person 类别检测结果。\n- 支持置信度阈值配置。\n- 返回统一标注框格式：x、y、width、height、confidence、className。\n- 评估 CPU 或 GPU 推理性能，硬件要求待确认。\n- 提供模型服务启动、停止、健康检查和日志查看方式。\n\n## 4. 自测任务\n- 使用本地测试视频或 RTSP 测试流验证拉流和展示。\n- 使用有行人、无行人、多人、遮挡、弱光样本验证检测结果。\n- 验证前端标注框与视频画面位置一致。\n- 验证无行人时不会持续展示行人提示。\n- 验证 RTSP 断流、账号错误、网络不可达、推理服务关闭时的前端提示和日志。\n- 输出自测记录：测试时间、样本、总检测次数、误检次数、误检率。"
+        },
+        "instructions": "启动状态：READY\n项目：yolo摄像头监控项目\n负责人：AA\n业务概要：连接本地摄像头 RTSP 数据流，在网页端实时识别行人并展示标注框和提示。\n\n## 仓库\n本地路径：D:\\project\\WeeCoder\\data\\workspaces\\yolo-camera-monitor\n基准分支：main\n目标分支：feature/yolo-camera-monitor\n执行模式：codex-local\n\n## 启动阻塞\n- 无\n\n## 开发任务\n1. [前端] 实现网页监控页面和标注框展示\n   描述：展示实时视频区域、行人提示、异常提示，并按检测结果绘制多行人标注框。\n   验收：保安打开页面后能看到监控画面占位或真实视频流。；检测到行人时显示标注框和明确提示。；无行人时不会持续保留旧提示或旧标注框。\n   检查：前端组件测试覆盖有行人、无行人、多人和异常状态。\n2. [后端] 实现 RTSP 接入、重连和健康状态接口\n   描述：读取摄像头配置，连接 RTSP 数据流，提供连接状态、断流提示和重连策略。\n   验收：RTSP 地址、账号和密码只在服务端配置。；断流、认证失败、网络不可达时返回明确状态。；健康检查能展示摄像头连接和最近帧时间。\n   检查：后端单测覆盖配置缺失、认证失败和断流状态。\n3. [推理服务] 定义并接入 YOLO 行人检测服务契约\n   描述：明确模型版本、输入帧格式、person 类过滤、置信度阈值和检测框 JSON schema。\n   验收：推理结果只返回 person 类别检测框。；检测框包含 x、y、width、height、confidence、className 和 timestamp。；模型异常时前端能看到检测服务异常提示。\n   检查：使用模拟推理响应验证检测结果解析和错误处理。\n4. [后端] 实现检测结果 API 和前端同步策略\n   描述：向前端提供最新检测结果，处理时间戳、坐标缩放、过期结果丢弃和多人框。\n   验收：前端按视频显示尺寸正确缩放检测框。；过期检测结果不会覆盖新画面。；多人同时出现时展示多个框。\n   检查：组件测试覆盖缩放、多人和过期检测结果。\n5. [测试] 实现误检率测试记录和统计口径\n   描述：记录测试样本、总检测次数、误检次数和误检率，支撑低于 30% 的验收判断。\n   验收：测试记录包含测试时间、样本、场景、总检测次数、误检次数和误检率。；误检率按 PRD 口径自动计算。；测试报告能复核验收结论。\n   检查：单测覆盖误检率计算和边界值。\n\n## 必须运行的检查命令\n- npm test\n- npm run build\n- npm audit --omit=dev\n\n## 执行要求\n- 严格按 PRD、技术交接包和开发任务清单实现。\n- 不要修改与本任务无关的文件。\n- 不要绕过测试、构建或依赖审计。\n- 不要把密钥、账号、RTSP 密码或内部地址写入前端代码或日志。\n- 每个变更必须补充或更新对应测试。\n- 完成后输出变更摘要、测试结果、安全/性能检查结果和剩余风险。"
+      },
+      "repositoryBootstrap": {
+        "status": "ready",
+        "bootstrappedAt": "2026-06-16T17:53:18.320Z",
+        "localPath": "D:\\project\\WeeCoder\\data\\workspaces\\yolo-camera-monitor",
+        "currentBranch": "main",
+        "gitInitialized": true,
+        "initialCommitCreated": true,
+        "filesCreated": [
+          "README.md",
+          "package.json",
+          "package-lock.json",
+          "src/detectionContract.js",
+          "test/detectionContract.test.js",
+          "scripts/build-check.js",
+          "docs/PRD.md"
+        ],
+        "issues": [],
+        "recommendations": [
+          "本地业务仓库已创建，请重新诊断仓库并准备目标分支。"
+        ]
+      },
+      "developmentRun": {
+        "id": "dev-run-real-yolo-20260629",
+        "mode": "codex-local-real-runtime",
+        "status": "completed",
+        "provider": "codex-local",
+        "actor": "AI 开发",
+        "sourceStageId": "development",
+        "repositorySnapshot": {
+          "status": "ready",
+          "repositoryUrl": "",
+          "localPath": "D:\\project\\WeeCoder",
+          "baseBranch": "main",
+          "targetBranch": "feature/yolo-real-monitor",
+          "executionMode": "codex-local",
+          "verificationCommands": [
+            "npm test",
+            "python -m unittest workers.test_yolo_monitor",
+            "npm run build"
+          ],
+          "notes": "真实 YOLO 监控实现位于 WeeCoder 当前项目内，敏感配置通过环境变量注入。",
+          "configuredAt": "2026-06-29T12:47:38.503Z",
+          "configuredBy": "技术负责人",
+          "missingFields": []
+        },
+        "startedAt": "2026-06-29T12:47:38.503Z",
+        "completedAt": "2026-06-29T12:47:38.503Z",
+        "summary": "真实 YOLO 摄像头监控 MVP 已完成：4 路 RTSP、YOLO worker、Node 代理、前端监控窗口和项目级运行摘要。",
+        "commitHash": "local-real-yolo-v1",
+        "filesChanged": [
+          "workers/yolo_monitor.py",
+          "workers/test_yolo_monitor.py",
+          "server/yoloMonitor.js",
+          "server/yoloMonitor.test.js",
+          "server/index.js",
+          "server/index.test.js",
+          "src/features/yolo-monitor/YoloMonitorPage.jsx",
+          "src/features/yolo-monitor/YoloMonitorPage.test.jsx",
+          "src/features/yolo-monitor/YoloProjectRuntimePanel.jsx",
+          "src/features/yolo-monitor/YoloProjectRuntimePanel.test.jsx",
+          "src/App.jsx",
+          "src/styles.css",
+          "docs/yolo-monitor.md",
+          "requirements-yolo.txt",
+          ".env.yolo.example"
+        ],
+        "repositoryAudit": null,
+        "changePackage": {
+          "status": "ready-for-review",
+          "createdAt": "2026-06-29T12:47:38.503Z",
+          "summary": "真实运行版本已生成，可以进入代码、安全和性能审查。",
+          "commitHash": "local-real-yolo-v1",
+          "filesChanged": [
+            "workers/yolo_monitor.py",
+            "workers/test_yolo_monitor.py",
+            "server/yoloMonitor.js",
+            "server/yoloMonitor.test.js",
+            "server/index.js",
+            "server/index.test.js",
+            "src/features/yolo-monitor/YoloMonitorPage.jsx",
+            "src/features/yolo-monitor/YoloMonitorPage.test.jsx",
+            "src/features/yolo-monitor/YoloProjectRuntimePanel.jsx",
+            "src/features/yolo-monitor/YoloProjectRuntimePanel.test.jsx",
+            "src/App.jsx",
+            "src/styles.css",
+            "docs/yolo-monitor.md",
+            "requirements-yolo.txt",
+            ".env.yolo.example"
+          ],
+          "repositoryAudit": null,
+          "tasks": [
+            {
+              "taskId": "real-worker",
+              "title": "实现真实 YOLO worker",
+              "area": "推理服务",
+              "status": "completed",
+              "result": "RTSP 拉流、YOLO 检测、MJPEG 输出和钉钉告警已实现。"
+            },
+            {
+              "taskId": "api-proxy",
+              "title": "实现后端代理和运行摘要",
+              "area": "后端",
+              "status": "completed",
+              "result": "监控 API 和项目级运行摘要已实现。"
+            },
+            {
+              "taskId": "frontend-monitor",
+              "title": "实现真实监控窗口",
+              "area": "前端",
+              "status": "completed",
+              "result": "4 路实时画面和项目运行摘要面板已实现。"
+            }
+          ],
+          "verification": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "blocked": 0
+          },
+          "reviewGate": {
+            "canStartReview": true,
+            "blockers": []
+          }
+        },
+        "taskResults": [
+          {
+            "taskId": "real-worker",
+            "title": "实现真实 YOLO worker",
+            "area": "推理服务",
+            "status": "completed",
+            "result": "RTSP 拉流、YOLO 检测、MJPEG 输出和钉钉告警已实现。"
+          },
+          {
+            "taskId": "api-proxy",
+            "title": "实现后端代理和运行摘要",
+            "area": "后端",
+            "status": "completed",
+            "result": "监控 API 和项目级运行摘要已实现。"
+          },
+          {
+            "taskId": "frontend-monitor",
+            "title": "实现真实监控窗口",
+            "area": "前端",
+            "status": "completed",
+            "result": "4 路实时画面和项目运行摘要面板已实现。"
+          }
+        ],
+        "checks": [
+          {
+            "command": "npm test",
+            "status": "passed",
+            "result": "50 个测试文件、400 条测试通过。",
+            "exitCode": 0,
+            "durationMs": 33600,
+            "startedAt": "2026-06-29T12:47:38.503Z",
+            "completedAt": "2026-06-29T12:47:38.503Z",
+            "stdout": "50 passed, 400 tests passed",
+            "stderr": ""
+          },
+          {
+            "command": "python -m unittest workers.test_yolo_monitor",
+            "status": "passed",
+            "result": "3 条 worker 单元测试通过。",
+            "exitCode": 0,
+            "durationMs": 600,
+            "startedAt": "2026-06-29T12:47:38.503Z",
+            "completedAt": "2026-06-29T12:47:38.503Z",
+            "stdout": "Ran 3 tests OK",
+            "stderr": ""
+          },
+          {
+            "command": "npm run build",
+            "status": "passed",
+            "result": "Vite 生产构建通过。",
+            "exitCode": 0,
+            "durationMs": 5380,
+            "startedAt": "2026-06-29T12:47:38.503Z",
+            "completedAt": "2026-06-29T12:47:38.503Z",
+            "stdout": "vite build passed",
+            "stderr": ""
+          }
+        ],
+        "blockers": [],
+        "nextActions": [
+          "进入真实 RTSP QA 验证和最终误检率统计。"
+        ]
+      },
+      "codeReviewReport": {
+        "status": "passed",
+        "reviewedAt": "2026-06-29T12:47:38.503Z",
+        "commitHash": "local-real-yolo-v1",
+        "summary": "真实 YOLO 监控版本代码、安全和性能基础审查通过，可以进入 QA 真实样本验证。",
+        "categories": [
+          {
+            "id": "code-quality",
+            "label": "代码质量",
+            "status": "passed",
+            "summary": "新增运行摘要纯函数、API 和前端面板，测试覆盖关键契约。",
+            "findings": []
+          },
+          {
+            "id": "security",
+            "label": "安全",
+            "status": "passed",
+            "summary": "敏感配置未写入仓库文件，前端只接收脱敏配置。",
+            "findings": []
+          },
+          {
+            "id": "performance",
+            "label": "性能",
+            "status": "passed",
+            "summary": "当前 CPU 推理可演示，生产建议 GPU 或抽帧优化。",
+            "findings": []
+          }
+        ],
+        "blockers": [],
+        "recommendations": [
+          "QA 阶段需要补齐真实样本误检率统计。",
+          "生产化前增加 worker 守护、日志和 GPU 性能基准。"
+        ],
+        "nextActions": [
+          "进入测试阶段，归档真实 RTSP 样本和误检率。"
+        ],
+        "sourceChangePackage": {
+          "status": "ready-for-review",
+          "createdAt": "2026-06-29T12:47:38.503Z",
+          "summary": "真实运行版本已生成，可以进入代码、安全和性能审查。",
+          "commitHash": "local-real-yolo-v1",
+          "filesChanged": [
+            "workers/yolo_monitor.py",
+            "workers/test_yolo_monitor.py",
+            "server/yoloMonitor.js",
+            "server/yoloMonitor.test.js",
+            "server/index.js",
+            "server/index.test.js",
+            "src/features/yolo-monitor/YoloMonitorPage.jsx",
+            "src/features/yolo-monitor/YoloMonitorPage.test.jsx",
+            "src/features/yolo-monitor/YoloProjectRuntimePanel.jsx",
+            "src/features/yolo-monitor/YoloProjectRuntimePanel.test.jsx",
+            "src/App.jsx",
+            "src/styles.css",
+            "docs/yolo-monitor.md",
+            "requirements-yolo.txt",
+            ".env.yolo.example"
+          ],
+          "repositoryAudit": null,
+          "tasks": [
+            {
+              "taskId": "real-worker",
+              "title": "实现真实 YOLO worker",
+              "area": "推理服务",
+              "status": "completed",
+              "result": "RTSP 拉流、YOLO 检测、MJPEG 输出和钉钉告警已实现。"
+            },
+            {
+              "taskId": "api-proxy",
+              "title": "实现后端代理和运行摘要",
+              "area": "后端",
+              "status": "completed",
+              "result": "监控 API 和项目级运行摘要已实现。"
+            },
+            {
+              "taskId": "frontend-monitor",
+              "title": "实现真实监控窗口",
+              "area": "前端",
+              "status": "completed",
+              "result": "4 路实时画面和项目运行摘要面板已实现。"
+            }
+          ],
+          "verification": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "blocked": 0
+          },
+          "reviewGate": {
+            "canStartReview": true,
+            "blockers": []
+          }
+        },
+        "reviewGate": {
+          "canAdvanceToQa": true,
+          "blockers": []
+        },
+        "qaHandoff": {
+          "status": "ready",
+          "commitHash": "local-real-yolo-v1",
+          "focusAreas": [
+            "4 路 RTSP 在线",
+            "有行人提示",
+            "无行人误报",
+            "弱光/遮挡",
+            "断流恢复",
+            "误检率统计"
+          ],
+          "requiredEvidence": [
+            "测试样本清单",
+            "测试时长和环境",
+            "总检测次数和误检次数",
+            "误检率计算过程"
+          ],
+          "blockers": []
+        }
+      },
+      "qaRun": null,
+      "qaEvidence": {
+        "status": "incomplete",
+        "recordedAt": "2026-06-29T12:47:38.503Z",
+        "recordedBy": "测试",
+        "sampleSet": "待归档：真实摄像头 72、73、74、75 的有行人、无行人、多人、遮挡、弱光和断流样本。",
+        "durationMinutes": 0,
+        "environment": "真实 RTSP 摄像头 + YOLOv8n CPU worker + WeeCoder 本地前后端。",
+        "browserScope": "待归档：Chrome / Edge 桌面浏览器。",
+        "notes": "功能已真实运行；最终验收前需要补齐误检率原始统计。",
+        "missingFields": [
+          "durationMinutes",
+          "totalDetections",
+          "falsePositiveCount"
+        ],
+        "requireFalsePositiveMetrics": true,
+        "totalDetections": null,
+        "falsePositiveCount": null,
+        "falsePositiveRate": null,
+        "falsePositiveThreshold": 0.3,
+        "falsePositivePassed": null,
+        "qualityGateStatus": "incomplete"
+      },
+      "acceptancePackage": null,
+      "members": {
+        "owner": "owner-aa",
+        "pm": "pm-lin",
+        "tech-lead": "tech-chen",
+        "ops": "ops-wang",
+        "ai-dev": "ai-dev-bot",
+        "local-runner": "runner-local",
+        "qa": "qa-zhao"
+      },
+      "stageConfirmations": {
+        "intake": {
+          "stageId": "intake",
+          "stageName": "项目入口",
+          "owner": "负责人",
+          "items": [
+            {
+              "id": "business-goal",
+              "title": "业务目标与负责人",
+              "description": "确认项目目标、发起人、业务负责人和优先级。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "scope-seed",
+              "title": "初始范围与约束",
+              "description": "确认当前痛点、初始范围、关键约束和不做事项。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 2,
+          "missingItems": [
+            {
+              "id": "business-goal",
+              "title": "业务目标与负责人",
+              "description": "确认项目目标、发起人、业务负责人和优先级。"
+            },
+            {
+              "id": "scope-seed",
+              "title": "初始范围与约束",
+              "description": "确认当前痛点、初始范围、关键约束和不做事项。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "intake-business-goal",
+              "itemId": "business-goal",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：业务目标与负责人",
+              "question": "请补充「业务目标与负责人」：确认项目目标、发起人、业务负责人和优先级。",
+              "expectedAnswer": "需要给出项目目标、发起人、业务负责人、优先级和期望交付时间。"
+            },
+            {
+              "id": "intake-scope-seed",
+              "itemId": "scope-seed",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：初始范围与约束",
+              "question": "请补充「初始范围与约束」：确认当前痛点、初始范围、关键约束和不做事项。",
+              "expectedAnswer": "需要给出当前痛点、初始范围、明确不做事项、关键约束和依赖。"
+            }
+          ]
+        },
+        "pm-requirements": {
+          "stageId": "pm-requirements",
+          "stageName": "项目经理需求",
+          "owner": "项目经理",
+          "items": [
+            {
+              "id": "target-users",
+              "title": "目标用户与核心场景",
+              "description": "确认目标用户、核心使用场景和主要业务动作。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "success-metrics",
+              "title": "成功指标与验收口径",
+              "description": "确认可量化成功指标、验收口径和统计方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "scope-boundary",
+              "title": "范围边界",
+              "description": "确认本期包含、不包含、后续再做和明确拒绝的内容。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "data-compliance",
+              "title": "数据权限与合规",
+              "description": "确认数据来源、是否保存、访问权限、留存周期和隐私要求。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "external-dependencies",
+              "title": "外部依赖",
+              "description": "确认第三方系统、账号、网络、设备、模型或人工交付依赖。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 5,
+          "missingItems": [
+            {
+              "id": "target-users",
+              "title": "目标用户与核心场景",
+              "description": "确认目标用户、核心使用场景和主要业务动作。"
+            },
+            {
+              "id": "success-metrics",
+              "title": "成功指标与验收口径",
+              "description": "确认可量化成功指标、验收口径和统计方式。"
+            },
+            {
+              "id": "scope-boundary",
+              "title": "范围边界",
+              "description": "确认本期包含、不包含、后续再做和明确拒绝的内容。"
+            },
+            {
+              "id": "data-compliance",
+              "title": "数据权限与合规",
+              "description": "确认数据来源、是否保存、访问权限、留存周期和隐私要求。"
+            },
+            {
+              "id": "external-dependencies",
+              "title": "外部依赖",
+              "description": "确认第三方系统、账号、网络、设备、模型或人工交付依赖。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "pm-requirements-target-users",
+              "itemId": "target-users",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：目标用户与核心场景",
+              "question": "请补充「目标用户与核心场景」：目标用户是谁，核心使用场景是什么，用户在页面中如何完成关键操作。",
+              "expectedAnswer": "需要给出用户角色、核心场景、触发条件、主要操作和页面反馈。"
+            },
+            {
+              "id": "pm-requirements-success-metrics",
+              "itemId": "success-metrics",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：成功指标与验收口径",
+              "question": "请补充「成功指标与验收口径」：误检率、测试样本和通过标准。",
+              "expectedAnswer": "需要给出指标阈值、统计口径、样本范围和验收方式。"
+            },
+            {
+              "id": "pm-requirements-scope-boundary",
+              "itemId": "scope-boundary",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：范围边界",
+              "question": "请补充「范围边界」：本期做什么、不做什么、后续再做什么，以及拒绝范围的理由。",
+              "expectedAnswer": "需要给出本期包含、不包含、后续再做、明确拒绝内容和边界原因。"
+            },
+            {
+              "id": "pm-requirements-data-compliance",
+              "itemId": "data-compliance",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：数据权限与合规",
+              "question": "请补充「数据权限与合规」：数据是否保存、谁能访问、保存多久、是否涉及隐私合规。",
+              "expectedAnswer": "需要给出数据来源、保存范围、访问权限、账号体系、留存周期和隐私要求。"
+            },
+            {
+              "id": "pm-requirements-external-dependencies",
+              "itemId": "external-dependencies",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：外部依赖",
+              "question": "请补充「外部依赖」：RTSP、账号、网络、硬件、模型和人工交付依赖分别由谁提供。",
+              "expectedAnswer": "需要给出第三方系统、账号权限、网络设备、模型、人工作业和到位时间。"
+            }
+          ]
+        },
+        "prd-approval": {
+          "stageId": "prd-approval",
+          "stageName": "PRD 审批",
+          "owner": "负责人",
+          "items": [
+            {
+              "id": "prd-reviewed",
+              "title": "PRD 完整性确认",
+              "description": "确认 PRD 已覆盖用户、场景、指标、范围、权限和依赖。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "acceptance-criteria",
+              "title": "验收标准确认",
+              "description": "确认验收标准可执行、可核验、可统计。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "priority-confirmed",
+              "title": "优先级与版本确认",
+              "description": "确认本期优先级、版本目标和延期处理原则。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 3,
+          "missingItems": [
+            {
+              "id": "prd-reviewed",
+              "title": "PRD 完整性确认",
+              "description": "确认 PRD 已覆盖用户、场景、指标、范围、权限和依赖。"
+            },
+            {
+              "id": "acceptance-criteria",
+              "title": "验收标准确认",
+              "description": "确认验收标准可执行、可核验、可统计。"
+            },
+            {
+              "id": "priority-confirmed",
+              "title": "优先级与版本确认",
+              "description": "确认本期优先级、版本目标和延期处理原则。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "prd-approval-prd-reviewed",
+              "itemId": "prd-reviewed",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：PRD 完整性确认",
+              "question": "请补充「PRD 完整性确认」：确认 PRD 已覆盖用户、场景、指标、范围、权限和依赖。",
+              "expectedAnswer": "需要给出 PRD 覆盖项确认结论、审批人、版本号和遗留风险。"
+            },
+            {
+              "id": "prd-approval-acceptance-criteria",
+              "itemId": "acceptance-criteria",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：验收标准确认",
+              "question": "请补充「验收标准确认」：确认验收标准可执行、可核验、可统计。",
+              "expectedAnswer": "需要给出可执行验收步骤、通过标准、统计方式和验收负责人。"
+            },
+            {
+              "id": "prd-approval-priority-confirmed",
+              "itemId": "priority-confirmed",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：优先级与版本确认",
+              "question": "请补充「优先级与版本确认」：确认本期优先级、版本目标和延期处理原则。",
+              "expectedAnswer": "需要给出本期优先级、版本目标、延期原则和必须保留功能。"
+            }
+          ]
+        },
+        "architecture": {
+          "stageId": "architecture",
+          "stageName": "架构与数据设计",
+          "owner": "技术负责人",
+          "items": [
+            {
+              "id": "module-boundary",
+              "title": "模块边界",
+              "description": "确认前端、后端、推理服务、数据存储和外部系统边界。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "api-contract",
+              "title": "API 与服务契约",
+              "description": "确认接口路径、请求响应结构、错误码、重试和超时策略。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "data-model",
+              "title": "数据库与数据模型",
+              "description": "确认数据库表、字段、索引、留存策略和迁移方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "model-deployment",
+              "title": "模型版本与部署方式",
+              "description": "确认模型版本、推理硬件、部署形态、输入输出格式和性能目标。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "module-boundary",
+              "title": "模块边界",
+              "description": "确认前端、后端、推理服务、数据存储和外部系统边界。"
+            },
+            {
+              "id": "api-contract",
+              "title": "API 与服务契约",
+              "description": "确认接口路径、请求响应结构、错误码、重试和超时策略。"
+            },
+            {
+              "id": "data-model",
+              "title": "数据库与数据模型",
+              "description": "确认数据库表、字段、索引、留存策略和迁移方式。"
+            },
+            {
+              "id": "model-deployment",
+              "title": "模型版本与部署方式",
+              "description": "确认模型版本、推理硬件、部署形态、输入输出格式和性能目标。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "architecture-module-boundary",
+              "itemId": "module-boundary",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：模块边界",
+              "question": "请补充「模块边界」：确认前端、后端、推理服务、数据存储和外部系统边界。",
+              "expectedAnswer": "需要给出前端、后端、推理服务、数据存储、外部系统边界和责任人。"
+            },
+            {
+              "id": "architecture-api-contract",
+              "itemId": "api-contract",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：API 与服务契约",
+              "question": "请补充「API 与服务契约」：确认接口路径、请求响应结构、错误码、重试和超时策略。",
+              "expectedAnswer": "需要给出接口路径、请求响应结构、错误码、超时、重试和幂等要求。"
+            },
+            {
+              "id": "architecture-data-model",
+              "itemId": "data-model",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：数据库与数据模型",
+              "question": "请补充「数据库与数据模型」：确认数据库表、字段、索引、留存策略和迁移方式。",
+              "expectedAnswer": "需要给出数据库表、字段、索引、迁移方式、留存策略和敏感字段处理。"
+            },
+            {
+              "id": "architecture-model-deployment",
+              "itemId": "model-deployment",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：模型版本与部署方式",
+              "question": "请补充「模型版本与部署方式」：确认模型版本、推理硬件、部署形态、输入输出格式和性能目标。",
+              "expectedAnswer": "需要给出模型版本、推理硬件、部署形态、输入输出格式和性能目标。"
+            }
+          ]
+        },
+        "ops-requirements": {
+          "stageId": "ops-requirements",
+          "stageName": "运维需求",
+          "owner": "运维",
+          "items": [
+            {
+              "id": "rtsp-access",
+              "title": "RTSP 接入凭据",
+              "description": "确认摄像头地址、账号密码、网络访问、防火墙和断流重连要求。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "runtime-environment",
+              "title": "服务器与运行环境",
+              "description": "确认 CPU/GPU、内存、显存、驱动、容器、端口和环境变量。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "service-operations",
+              "title": "启停重启与回滚",
+              "description": "确认服务启动、停止、重启、回滚和故障恢复方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "monitoring-logging",
+              "title": "日志监控与告警",
+              "description": "确认日志路径、监控指标、告警方式和异常页面提示。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "rtsp-access",
+              "title": "RTSP 接入凭据",
+              "description": "确认摄像头地址、账号密码、网络访问、防火墙和断流重连要求。"
+            },
+            {
+              "id": "runtime-environment",
+              "title": "服务器与运行环境",
+              "description": "确认 CPU/GPU、内存、显存、驱动、容器、端口和环境变量。"
+            },
+            {
+              "id": "service-operations",
+              "title": "启停重启与回滚",
+              "description": "确认服务启动、停止、重启、回滚和故障恢复方式。"
+            },
+            {
+              "id": "monitoring-logging",
+              "title": "日志监控与告警",
+              "description": "确认日志路径、监控指标、告警方式和异常页面提示。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "ops-requirements-rtsp-access",
+              "itemId": "rtsp-access",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：RTSP 接入凭据",
+              "question": "请补充「RTSP 接入凭据」：摄像头 RTSP 地址、账号密码提供方式、网络访问和断流重连要求。",
+              "expectedAnswer": "需要给出 RTSP 地址、账号密码提供方式、网络连通性、防火墙和断流重连要求。"
+            },
+            {
+              "id": "ops-requirements-runtime-environment",
+              "itemId": "runtime-environment",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：服务器与运行环境",
+              "question": "请补充「服务器与运行环境」：CPU/GPU、内存、显存、驱动、容器、端口和环境变量。",
+              "expectedAnswer": "需要给出 CPU/GPU、内存、显存、驱动、容器、端口和环境变量。"
+            },
+            {
+              "id": "ops-requirements-service-operations",
+              "itemId": "service-operations",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：启停重启与回滚",
+              "question": "请补充「启停重启与回滚」：确认服务启动、停止、重启、回滚和故障恢复方式。",
+              "expectedAnswer": "需要给出服务启动、停止、重启、回滚、故障恢复和负责人。"
+            },
+            {
+              "id": "ops-requirements-monitoring-logging",
+              "itemId": "monitoring-logging",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：日志监控与告警",
+              "question": "请补充「日志监控与告警」：确认日志路径、监控指标、告警方式和异常页面提示。",
+              "expectedAnswer": "需要给出日志路径、监控指标、告警方式、异常页面提示和排障入口。"
+            }
+          ]
+        },
+        "development": {
+          "stageId": "development",
+          "stageName": "自动开发",
+          "owner": "AI 开发",
+          "items": [
+            {
+              "id": "task-implementation",
+              "title": "开发任务实现范围",
+              "description": "确认本轮代码变更范围、涉及模块和不触碰的边界。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "self-test",
+              "title": "开发自测",
+              "description": "确认单元测试、构建、静态检查和本地运行结果。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "change-summary",
+              "title": "变更说明",
+              "description": "确认变更摘要、文件清单、验证命令和已知限制。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 3,
+          "missingItems": [
+            {
+              "id": "task-implementation",
+              "title": "开发任务实现范围",
+              "description": "确认本轮代码变更范围、涉及模块和不触碰的边界。"
+            },
+            {
+              "id": "self-test",
+              "title": "开发自测",
+              "description": "确认单元测试、构建、静态检查和本地运行结果。"
+            },
+            {
+              "id": "change-summary",
+              "title": "变更说明",
+              "description": "确认变更摘要、文件清单、验证命令和已知限制。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "development-task-implementation",
+              "itemId": "task-implementation",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：开发任务实现范围",
+              "question": "请补充「开发任务实现范围」：确认本轮代码变更范围、涉及模块和不触碰的边界。",
+              "expectedAnswer": "需要给出本轮代码变更范围、涉及模块、不触碰边界和完成定义。"
+            },
+            {
+              "id": "development-self-test",
+              "itemId": "self-test",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：开发自测",
+              "question": "请补充「开发自测」：确认单元测试、构建、静态检查和本地运行结果。",
+              "expectedAnswer": "需要给出单元测试、构建、静态检查、本地运行结果和失败项处理。"
+            },
+            {
+              "id": "development-change-summary",
+              "itemId": "change-summary",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：变更说明",
+              "question": "请补充「变更说明」：确认变更摘要、文件清单、验证命令和已知限制。",
+              "expectedAnswer": "需要给出变更摘要、文件清单、验证命令、已知限制和回滚建议。"
+            }
+          ]
+        },
+        "review": {
+          "stageId": "review",
+          "stageName": "代码/安全/性能 Review",
+          "owner": "技术负责人",
+          "items": [
+            {
+              "id": "code-quality",
+              "title": "代码质量",
+              "description": "确认可维护性、边界处理、错误处理和关键路径质量。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "security",
+              "title": "安全检查",
+              "description": "确认密钥、权限、输入校验、依赖和敏感数据处理风险。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "performance",
+              "title": "性能检查",
+              "description": "确认关键接口、推理延迟、资源消耗和降级策略。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "qa-handoff",
+              "title": "测试交接",
+              "description": "确认测试入口、测试数据、覆盖范围和不可测事项。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "code-quality",
+              "title": "代码质量",
+              "description": "确认可维护性、边界处理、错误处理和关键路径质量。"
+            },
+            {
+              "id": "security",
+              "title": "安全检查",
+              "description": "确认密钥、权限、输入校验、依赖和敏感数据处理风险。"
+            },
+            {
+              "id": "performance",
+              "title": "性能检查",
+              "description": "确认关键接口、推理延迟、资源消耗和降级策略。"
+            },
+            {
+              "id": "qa-handoff",
+              "title": "测试交接",
+              "description": "确认测试入口、测试数据、覆盖范围和不可测事项。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "review-code-quality",
+              "itemId": "code-quality",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：代码质量",
+              "question": "请补充「代码质量」：确认可维护性、边界处理、错误处理和关键路径质量。",
+              "expectedAnswer": "需要给出可维护性、边界处理、错误处理、关键路径质量和遗留问题。"
+            },
+            {
+              "id": "review-security",
+              "itemId": "security",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：安全检查",
+              "question": "请补充「安全检查」：确认密钥、权限、输入校验、依赖和敏感数据处理风险。",
+              "expectedAnswer": "需要给出密钥、权限、输入校验、依赖、敏感数据处理和安全风险结论。"
+            },
+            {
+              "id": "review-performance",
+              "itemId": "performance",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：性能检查",
+              "question": "请补充「性能检查」：确认关键接口、推理延迟、资源消耗和降级策略。",
+              "expectedAnswer": "需要给出关键接口、推理延迟、资源消耗、并发边界和降级策略。"
+            },
+            {
+              "id": "review-qa-handoff",
+              "itemId": "qa-handoff",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：测试交接",
+              "question": "请补充「测试交接」：确认测试入口、测试数据、覆盖范围和不可测事项。",
+              "expectedAnswer": "需要给出测试入口、测试数据、覆盖范围、不可测事项和测试负责人。"
+            }
+          ]
+        },
+        "qa": {
+          "stageId": "qa",
+          "stageName": "测试",
+          "owner": "测试",
+          "items": [
+            {
+              "id": "test-samples",
+              "title": "测试样本与时长",
+              "description": "确认有行人、无人、多人、遮挡、弱光和断流样本及测试时长。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "false-positive-metric",
+              "title": "误检率统计口径",
+              "description": "确认总检测次数、误检次数、人工标注和低于 30% 的判定方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "browser-scope",
+              "title": "浏览器与环境范围",
+              "description": "确认桌面浏览器范围、分辨率、网络条件和测试环境。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "defect-record",
+              "title": "缺陷记录规则",
+              "description": "确认缺陷编号、严重级别、复现步骤、截图和回归要求。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "test-samples",
+              "title": "测试样本与时长",
+              "description": "确认有行人、无人、多人、遮挡、弱光和断流样本及测试时长。"
+            },
+            {
+              "id": "false-positive-metric",
+              "title": "误检率统计口径",
+              "description": "确认总检测次数、误检次数、人工标注和低于 30% 的判定方式。"
+            },
+            {
+              "id": "browser-scope",
+              "title": "浏览器与环境范围",
+              "description": "确认桌面浏览器范围、分辨率、网络条件和测试环境。"
+            },
+            {
+              "id": "defect-record",
+              "title": "缺陷记录规则",
+              "description": "确认缺陷编号、严重级别、复现步骤、截图和回归要求。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "qa-test-samples",
+              "itemId": "test-samples",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：测试样本与时长",
+              "question": "请补充「测试样本与时长」：有行人、无行人、多人、遮挡、弱光和断流样本分别如何准备。",
+              "expectedAnswer": "需要给出样本清单、每类场景时长、样本来源、人工标注人和覆盖场景。"
+            },
+            {
+              "id": "qa-false-positive-metric",
+              "itemId": "false-positive-metric",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：误检率统计口径",
+              "question": "请补充「误检率统计口径」：如何统计总检测次数、误检次数、人工标注和低于 30% 的判定。",
+              "expectedAnswer": "需要给出总检测次数、误检次数、人工标注方式、统计窗口和低于 30% 的判定方式。"
+            },
+            {
+              "id": "qa-browser-scope",
+              "itemId": "browser-scope",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：浏览器与环境范围",
+              "question": "请补充「浏览器与环境范围」：需要覆盖哪些桌面浏览器、分辨率、网络条件和测试环境。",
+              "expectedAnswer": "需要给出桌面浏览器范围、分辨率、网络条件、测试环境和兼容性结论。"
+            },
+            {
+              "id": "qa-defect-record",
+              "itemId": "defect-record",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：缺陷记录规则",
+              "question": "请补充「缺陷记录规则」：确认缺陷编号、严重级别、复现步骤、截图和回归要求。",
+              "expectedAnswer": "需要给出缺陷编号、严重级别、复现步骤、截图证据和回归要求。"
+            }
+          ]
+        },
+        "defect-loop": {
+          "stageId": "defect-loop",
+          "stageName": "缺陷回归",
+          "owner": "AI 开发 / 测试",
+          "items": [
+            {
+              "id": "defect-scope",
+              "title": "缺陷范围确认",
+              "description": "确认每个缺陷影响范围、复现路径、严重级别和负责人。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "fix-plan",
+              "title": "修复计划",
+              "description": "确认修复策略、影响模块、回滚方式和验证命令。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "regression",
+              "title": "回归验证",
+              "description": "确认补充回归用例、通过结果和关闭条件。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 3,
+          "missingItems": [
+            {
+              "id": "defect-scope",
+              "title": "缺陷范围确认",
+              "description": "确认每个缺陷影响范围、复现路径、严重级别和负责人。"
+            },
+            {
+              "id": "fix-plan",
+              "title": "修复计划",
+              "description": "确认修复策略、影响模块、回滚方式和验证命令。"
+            },
+            {
+              "id": "regression",
+              "title": "回归验证",
+              "description": "确认补充回归用例、通过结果和关闭条件。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "defect-loop-defect-scope",
+              "itemId": "defect-scope",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：缺陷范围确认",
+              "question": "请补充「缺陷范围确认」：确认每个缺陷影响范围、复现路径、严重级别和负责人。",
+              "expectedAnswer": "需要给出每个缺陷影响范围、复现路径、严重级别和责任人。"
+            },
+            {
+              "id": "defect-loop-fix-plan",
+              "itemId": "fix-plan",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：修复计划",
+              "question": "请补充「修复计划」：确认修复策略、影响模块、回滚方式和验证命令。",
+              "expectedAnswer": "需要给出修复策略、影响模块、回滚方式、验证命令和预计完成时间。"
+            },
+            {
+              "id": "defect-loop-regression",
+              "itemId": "regression",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：回归验证",
+              "question": "请补充「回归验证」：确认补充回归用例、通过结果和关闭条件。",
+              "expectedAnswer": "需要给出补充回归用例、通过结果、关闭条件和剩余风险。"
+            }
+          ]
+        },
+        "acceptance": {
+          "stageId": "acceptance",
+          "stageName": "最终验收",
+          "owner": "负责人",
+          "items": [
+            {
+              "id": "delivery-package",
+              "title": "交付包完整性",
+              "description": "确认 PRD、实现摘要、测试报告、部署说明和风险清单齐备。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "qa-evidence",
+              "title": "测试证据",
+              "description": "确认测试样本、执行时间、统计结果和缺陷关闭证据可核验。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "ops-handoff",
+              "title": "运维交接",
+              "description": "确认部署、日志、监控、告警、启停重启和应急联系人。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "archive-version",
+              "title": "归档版本",
+              "description": "确认验收版本号、归档时间、签收人和后续待办。",
+              "required": true,
+              "value": "浏览器验证：阶段确认事项保存链路已通过。",
+              "status": "confirmed",
+              "confirmedBy": "负责人",
+              "confirmedAt": "2026-06-17T02:37:24.653Z"
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 1,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "delivery-package",
+              "title": "交付包完整性",
+              "description": "确认 PRD、实现摘要、测试报告、部署说明和风险清单齐备。"
+            },
+            {
+              "id": "qa-evidence",
+              "title": "测试证据",
+              "description": "确认测试样本、执行时间、统计结果和缺陷关闭证据可核验。"
+            },
+            {
+              "id": "ops-handoff",
+              "title": "运维交接",
+              "description": "确认部署、日志、监控、告警、启停重启和应急联系人。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "acceptance-delivery-package",
+              "itemId": "delivery-package",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：交付包完整性",
+              "question": "请补充「交付包完整性」：确认 PRD、实现摘要、测试报告、部署说明和风险清单齐备。",
+              "expectedAnswer": "需要给出 PRD、实现摘要、测试报告、部署说明和风险清单。"
+            },
+            {
+              "id": "acceptance-qa-evidence",
+              "itemId": "qa-evidence",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：测试证据",
+              "question": "请补充「测试证据」：确认测试样本、执行时间、统计结果和缺陷关闭证据可核验。",
+              "expectedAnswer": "需要给出测试样本、执行时间、统计结果、缺陷关闭证据和验收结论。"
+            },
+            {
+              "id": "acceptance-ops-handoff",
+              "itemId": "ops-handoff",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：运维交接",
+              "question": "请补充「运维交接」：确认部署、日志、监控、告警、启停重启和应急联系人。",
+              "expectedAnswer": "需要给出部署、日志、监控、告警、启停重启和应急联系人。"
+            }
+          ]
+        }
+      },
+      "defectFixPackage": null,
+      "ownerEscalations": {},
+      "yoloQaSession": null
+    },
+    {
+      "id": "客户门户升级-a65ae74f",
+      "name": "客户门户升级",
+      "sponsor": "业务负责人",
+      "summary": "让客户可以自助查询订单、提交工单，并让负责人看到需求到验收的完整 AI 交付流转。",
+      "currentStageId": "pm-requirements",
+      "health": "on-track",
+      "createdAt": "2026-06-16T09:31:41.206Z",
+      "updatedAt": "2026-06-16T12:12:56.626Z",
+      "stages": [
+        {
+          "id": "intake",
+          "name": "项目入口",
+          "owner": "负责人",
+          "description": "创建项目、明确业务目标、范围和发起人。",
+          "checklist": [
+            "填写项目名称",
+            "明确发起人",
+            "写清业务目标",
+            "说明当前痛点"
+          ],
+          "status": "approved"
+        },
+        {
+          "id": "pm-requirements",
+          "name": "项目经理需求",
+          "owner": "项目经理",
+          "description": "逐轮澄清需求，形成 PRD、验收标准和范围边界。",
+          "checklist": [
+            "识别用户角色",
+            "拆分核心场景",
+            "明确非目标",
+            "定义验收标准"
+          ],
+          "status": "active"
+        },
+        {
+          "id": "prd-approval",
+          "name": "PRD 审批",
+          "owner": "负责人",
+          "description": "负责人确认需求完整性、优先级和交付范围。",
+          "checklist": [
+            "检查目标一致性",
+            "确认范围边界",
+            "确认验收标准",
+            "审批进入技术设计"
+          ],
+          "status": "blocked"
+        },
+        {
+          "id": "architecture",
+          "name": "架构与数据设计",
+          "owner": "技术负责人",
+          "description": "确认系统方案、接口、数据库表、风险和开发任务。",
+          "checklist": [
+            "设计模块边界",
+            "定义 API",
+            "设计数据库表",
+            "拆分开发任务"
+          ],
+          "status": "blocked"
+        },
+        {
+          "id": "ops-requirements",
+          "name": "运维需求",
+          "owner": "运维",
+          "description": "确认服务器、环境变量、依赖服务、日志监控和回滚方案。",
+          "checklist": [
+            "列出资源规格",
+            "列出环境变量",
+            "列出依赖服务",
+            "定义监控与回滚"
+          ],
+          "status": "blocked"
+        },
+        {
+          "id": "development",
+          "name": "自动开发",
+          "owner": "AI 开发",
+          "description": "按任务开发，实现代码、自测并提交变更说明。",
+          "checklist": [
+            "读取 PRD 和技术方案",
+            "按任务实现",
+            "运行单元测试",
+            "输出变更说明"
+          ],
+          "status": "queued"
+        },
+        {
+          "id": "review",
+          "name": "代码/安全/性能 Review",
+          "owner": "技术负责人",
+          "description": "检查代码质量、安全风险、性能风险和可维护性。",
+          "checklist": [
+            "代码 review",
+            "安全检查",
+            "性能检查",
+            "可维护性检查"
+          ],
+          "status": "queued"
+        },
+        {
+          "id": "qa",
+          "name": "测试",
+          "owner": "测试",
+          "description": "生成测试用例、执行自动测试、记录缺陷和测试结论。",
+          "checklist": [
+            "编写测试用例",
+            "执行自动测试",
+            "记录缺陷",
+            "输出测试报告"
+          ],
+          "status": "queued"
+        },
+        {
+          "id": "defect-loop",
+          "name": "缺陷回归",
+          "owner": "AI 开发 / 测试",
+          "description": "修复测试缺陷，重新验证关键路径。",
+          "checklist": [
+            "确认缺陷范围",
+            "修复缺陷",
+            "补充回归测试",
+            "验证通过"
+          ],
+          "status": "queued"
+        },
+        {
+          "id": "acceptance",
+          "name": "最终验收",
+          "owner": "负责人",
+          "description": "汇总交付结果、发布说明、运维交接和验收结论。",
+          "checklist": [
+            "确认测试通过",
+            "确认运维交接",
+            "确认发布说明",
+            "归档交付报告"
+          ],
+          "status": "queued"
+        }
+      ],
+      "artifacts": {
+        "intake": "# 项目入口: 客户门户升级\n负责人: 业务负责人\n业务概要: 让客户可以自助查询订单、提交工单，并让负责人看到需求到验收的完整 AI 交付流转。\n- 初始目标已经登记。\n- 下一步由项目经理逐轮澄清需求。",
+        "pm-requirements": "# PRD 草案: 客户门户升级\n负责人: 业务负责人\n\n## 业务背景\n让客户可以自助查询订单、提交工单，并让负责人看到需求到验收的完整 AI 交付流转。\n\n## 需求澄清进度\n已回答 3/6 个关键问题。\n\n### 目标用户\n客户、客服专员、客服主管和系统管理员。\n\n### 核心场景\n客户查询订单、提交工单；客服分派、回复、关闭工单；主管查看处理效率。\n\n### 成功指标\n平均处理时长降低30%，客户自助查询覆盖80%常见问题\n\n### 范围边界\n待确认：本期做什么，不做什么？请明确非目标。\n\n### 数据与权限\n待确认：需要哪些数据、权限、审批或合规限制？\n\n### 外部依赖\n待确认：需要对接哪些系统、第三方服务或内部接口？\n\n## 下一步\n- 继续补齐未回答的问题，再生成 PRD。",
+        "prd-approval": "# PRD: 客户门户升级\n\n## 1. 项目背景\n让客户可以自助查询订单、提交工单，并让负责人看到需求到验收的完整 AI 交付流转。\n\n## 2. 目标用户\n客户、客服专员、客服主管和系统管理员。\n\n## 3. 核心场景\n客户查询订单、提交工单；客服分派、回复、关闭工单；主管查看处理效率。\n\n## 4. 成功指标\n待项目经理补充。\n\n## 5. 范围边界\n待项目经理补充。\n\n## 6. 数据、权限与合规\n待项目经理补充。\n\n## 7. 外部依赖\n待项目经理补充。\n\n## 8. 验收标准\n- 每个核心场景都有可执行的验收路径。\n- 数据权限符合需求澄清中的限制。\n- 测试阶段需要覆盖正常路径、异常路径和权限边界。\n\n## 9. 交付流转建议\n- PRD 审批通过后进入架构与数据设计。\n- 如涉及新服务、数据库、外部依赖或权限变更，必须进入运维需求确认。",
+        "architecture": "# 技术方案: 客户门户升级\n## 模块\n- Web/API 服务\n- 数据存储\n- 审计日志\n## 数据库草案\n- projects\n- workflow_stages\n- artifacts\n- approvals",
+        "ops-requirements": "# 运维需求: 客户门户升级\n- 服务器规格、运行环境和部署权限待运维确认。\n- 需要明确日志、监控、备份、回滚和告警策略。",
+        "requirementReview": "# 需求质检报告: 客户门户升级\n\n## 结论\n暂不建议提交 PRD 审批。\n\n## 完整度\n- 已完成: 3/6\n- 评分: 50\n\n## 阻塞项\n- 范围边界缺失: 未说明本次升级包含哪些功能、不包含哪些功能，无法控制交付范围和验收口径。\n- 数据与权限缺失: 未定义客户、客服、主管、管理员分别可查看和操作哪些订单、工单和统计数据，存在权限越界风险。\n- 外部依赖缺失: 未说明订单系统、工单系统、身份认证、消息通知等依赖来源和接口条件，无法评估排期和集成风险。\n\n## 风险提醒\n- 成功指标验收口径不完整: 平均处理时长降低30%缺少基线、统计周期和数据来源；客户自助查询覆盖80%常见问题中，常见问题范围未定义。\n- 范围没有非目标: 未明确哪些能力本期不做，例如支付、退款、复杂售后、全渠道客服或历史数据迁移，容易导致范围蔓延。\n- 业务概要与需求答案存在缺口: 业务概要提到负责人查看需求到验收的完整 AI 交付流转，但目标用户和核心场景未覆盖该角色和该流程。\n\n## 建议\n- 补充本期范围和明确非目标，形成可验收的功能清单。\n- 补充角色权限矩阵，明确订单、工单、统计报表和管理配置的访问边界。\n- 补充外部系统依赖清单，包括订单系统、认证系统、通知渠道和接口负责人。\n- 细化成功指标的基线、统计周期、计算公式和数据来源。\n- 补充负责人查看 AI 交付流转的具体场景和验收标准。"
+      },
+      "risks": [
+        "真实 AI coding、服务器开通和部署执行尚未接入；当前版本先验证业务流转和审批闭环。"
+      ],
+      "history": [
+        {
+          "type": "owner-escalation-sent",
+          "actor": "AA",
+          "actorUserId": "owner-aa",
+          "note": "Sent from owner cockpit.",
+          "at": "2026-06-24T02:49:48.268Z",
+          "escalationMessageId": "owner-escalation-pm-客户门户升级-a65ae74f",
+          "escalationStatus": "sent",
+          "role": "pm",
+          "roleLabel": "PM",
+          "recipientUserId": "pm-lin",
+          "recipientName": "林项目经理",
+          "escalationLevel": "escalated",
+          "overdueHours": 134.56,
+          "subject": "Escalate PM handoff: 客户门户升级 overdue 134.56h",
+          "body": "PM: 客户门户升级 is overdue by 134.56h. PM should resolve requirement blockers and update the PRD inputs.",
+          "auditReason": "api-owner-escalation-sent",
+          "organizationId": "wee-coder-labs"
+        },
+        {
+          "type": "requirement-review",
+          "from": "pm-requirements",
+          "to": "pm-requirements",
+          "actor": "PM",
+          "note": "需求质检发现待补充项",
+          "at": "2026-06-16T12:12:56.626Z"
+        },
+        {
+          "type": "requirement-answer",
+          "from": "pm-requirements",
+          "to": "pm-requirements",
+          "actor": "项目经理",
+          "note": "成功指标",
+          "at": "2026-06-16T11:45:13.996Z"
+        },
+        {
+          "type": "reject",
+          "from": "prd-approval",
+          "to": "pm-requirements",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T11:44:06.517Z"
+        },
+        {
+          "type": "reject",
+          "from": "architecture",
+          "to": "prd-approval",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T11:44:06.192Z"
+        },
+        {
+          "type": "reject",
+          "from": "ops-requirements",
+          "to": "architecture",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T11:44:05.695Z"
+        },
+        {
+          "type": "advance",
+          "from": "architecture",
+          "to": "ops-requirements",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T11:43:58.435Z"
+        },
+        {
+          "type": "advance",
+          "from": "prd-approval",
+          "to": "architecture",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T11:43:56.789Z"
+        },
+        {
+          "type": "advance",
+          "from": "pm-requirements",
+          "to": "prd-approval",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T11:43:54.069Z"
+        },
+        {
+          "type": "prd-generated",
+          "from": "pm-requirements",
+          "to": "prd-approval",
+          "actor": "????",
+          "note": "已根据需求澄清内容生成 PRD",
+          "at": "2026-06-16T11:35:36.323Z"
+        },
+        {
+          "type": "prd-generated",
+          "from": "pm-requirements",
+          "to": "prd-approval",
+          "actor": "项目经理",
+          "note": "已根据需求澄清内容生成 PRD",
+          "at": "2026-06-16T10:39:24.067Z"
+        },
+        {
+          "type": "requirement-answer",
+          "from": "pm-requirements",
+          "to": "pm-requirements",
+          "actor": "项目经理",
+          "note": "核心场景",
+          "at": "2026-06-16T10:39:11.492Z"
+        },
+        {
+          "type": "requirement-answer",
+          "from": "pm-requirements",
+          "to": "pm-requirements",
+          "actor": "项目经理",
+          "note": "目标用户",
+          "at": "2026-06-16T10:38:36.394Z"
+        },
+        {
+          "type": "advance",
+          "from": "intake",
+          "to": "pm-requirements",
+          "actor": "负责人",
+          "note": "",
+          "at": "2026-06-16T09:32:05.311Z"
+        }
+      ],
+      "prdStatus": "draft",
+      "requirementQuestions": [
+        {
+          "id": "users",
+          "label": "目标用户",
+          "prompt": "谁会使用这个系统？请区分主要用户、管理用户和外部用户。",
+          "placeholder": "例如：客户、客服专员、客服主管、系统管理员"
+        },
+        {
+          "id": "scenarios",
+          "label": "核心场景",
+          "prompt": "本期必须支持哪些核心业务场景？按用户动作列出来。",
+          "placeholder": "例如：提交工单、分配工单、回复工单、关闭工单"
+        },
+        {
+          "id": "successMetrics",
+          "label": "成功指标",
+          "prompt": "项目上线后如何判断成功？请给出可验证指标。",
+          "placeholder": "例如：平均处理时长降低 30%，客户自助查询覆盖 80% 常见问题"
+        },
+        {
+          "id": "scope",
+          "label": "范围边界",
+          "prompt": "本期做什么，不做什么？请明确非目标。",
+          "placeholder": "例如：本期不做移动端 App，不做智能客服机器人"
+        },
+        {
+          "id": "data",
+          "label": "数据与权限",
+          "prompt": "需要哪些数据、权限、审批或合规限制？",
+          "placeholder": "例如：客户资料只读，财务字段仅主管可见，操作全量审计"
+        },
+        {
+          "id": "integrations",
+          "label": "外部依赖",
+          "prompt": "需要对接哪些系统、第三方服务或内部接口？",
+          "placeholder": "例如：CRM、订单系统、短信服务、企业微信"
+        }
+      ],
+      "requirementAnswers": {
+        "users": "客户、客服专员、客服主管和系统管理员。",
+        "scenarios": "客户查询订单、提交工单；客服分派、回复、关闭工单；主管查看处理效率。",
+        "successMetrics": "平均处理时长降低30%，客户自助查询覆盖80%常见问题"
+      },
+      "prdGeneratedAt": "2026-06-16T11:35:36.323Z",
+      "prdProvider": "codex-cli",
+      "prdProviderError": "",
+      "prdApprovalReady": false,
+      "businessSkills": [
+        {
+          "id": "requirement-clarification",
+          "name": "需求澄清 Skill",
+          "stageId": "pm-requirements",
+          "owner": "项目经理",
+          "description": "逐轮确认用户、场景、指标、范围、数据权限和外部依赖。"
+        },
+        {
+          "id": "requirement-quality-review",
+          "name": "需求完整性评审 Skill",
+          "stageId": "pm-requirements",
+          "owner": "AI 项目助理",
+          "description": "检查需求是否完整、可验收、可交付，并指出阻塞项和风险。"
+        },
+        {
+          "id": "prd-draft-generation",
+          "name": "PRD 草稿生成 Skill",
+          "stageId": "pm-requirements",
+          "owner": "AI 产品助理",
+          "description": "基于已确认需求生成结构化 PRD 草稿，缺失信息明确标注待补充。"
+        },
+        {
+          "id": "prd-approval-gate",
+          "name": "PRD 审批门禁 Skill",
+          "stageId": "prd-approval",
+          "owner": "负责人",
+          "description": "在进入技术方案前确认 PRD 完整度、范围边界和验收标准。"
+        }
+      ],
+      "requirementReview": {
+        "status": "needs-work",
+        "score": 50,
+        "completedCount": 3,
+        "totalCount": 6,
+        "missingQuestionIds": [
+          "scope",
+          "data",
+          "integrations"
+        ],
+        "missingQuestions": [
+          {
+            "id": "scope",
+            "label": "范围边界"
+          },
+          {
+            "id": "data",
+            "label": "数据与权限"
+          },
+          {
+            "id": "integrations",
+            "label": "外部依赖"
+          }
+        ],
+        "blockers": [
+          {
+            "title": "范围边界缺失",
+            "detail": "未说明本次升级包含哪些功能、不包含哪些功能，无法控制交付范围和验收口径。"
+          },
+          {
+            "title": "数据与权限缺失",
+            "detail": "未定义客户、客服、主管、管理员分别可查看和操作哪些订单、工单和统计数据，存在权限越界风险。"
+          },
+          {
+            "title": "外部依赖缺失",
+            "detail": "未说明订单系统、工单系统、身份认证、消息通知等依赖来源和接口条件，无法评估排期和集成风险。"
+          }
+        ],
+        "warnings": [
+          {
+            "title": "成功指标验收口径不完整",
+            "detail": "平均处理时长降低30%缺少基线、统计周期和数据来源；客户自助查询覆盖80%常见问题中，常见问题范围未定义。"
+          },
+          {
+            "title": "范围没有非目标",
+            "detail": "未明确哪些能力本期不做，例如支付、退款、复杂售后、全渠道客服或历史数据迁移，容易导致范围蔓延。"
+          },
+          {
+            "title": "业务概要与需求答案存在缺口",
+            "detail": "业务概要提到负责人查看需求到验收的完整 AI 交付流转，但目标用户和核心场景未覆盖该角色和该流程。"
+          }
+        ],
+        "recommendations": [
+          "补充本期范围和明确非目标，形成可验收的功能清单。",
+          "补充角色权限矩阵，明确订单、工单、统计报表和管理配置的访问边界。",
+          "补充外部系统依赖清单，包括订单系统、认证系统、通知渠道和接口负责人。",
+          "细化成功指标的基线、统计周期、计算公式和数据来源。",
+          "补充负责人查看 AI 交付流转的具体场景和验收标准。"
+        ],
+        "provider": "codex-cli",
+        "providerError": "",
+        "reviewedAt": "2026-06-16T12:12:56.626Z"
+      },
+      "technicalHandoffStatus": "draft",
+      "technicalHandoffProvider": "",
+      "technicalHandoffProviderError": "",
+      "members": {
+        "owner": "owner-aa",
+        "pm": "pm-lin",
+        "tech-lead": "tech-chen",
+        "ops": "ops-wang",
+        "ai-dev": "ai-dev-bot",
+        "local-runner": "runner-local",
+        "qa": "qa-zhao"
+      },
+      "stageConfirmations": {
+        "intake": {
+          "stageId": "intake",
+          "stageName": "项目入口",
+          "owner": "负责人",
+          "items": [
+            {
+              "id": "business-goal",
+              "title": "业务目标与负责人",
+              "description": "确认项目目标、发起人、业务负责人和优先级。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "scope-seed",
+              "title": "初始范围与约束",
+              "description": "确认当前痛点、初始范围、关键约束和不做事项。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 2,
+          "missingItems": [
+            {
+              "id": "business-goal",
+              "title": "业务目标与负责人",
+              "description": "确认项目目标、发起人、业务负责人和优先级。"
+            },
+            {
+              "id": "scope-seed",
+              "title": "初始范围与约束",
+              "description": "确认当前痛点、初始范围、关键约束和不做事项。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "intake-business-goal",
+              "itemId": "business-goal",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：业务目标与负责人",
+              "question": "请补充「业务目标与负责人」：确认项目目标、发起人、业务负责人和优先级。",
+              "expectedAnswer": "需要给出项目目标、发起人、业务负责人、优先级和期望交付时间。"
+            },
+            {
+              "id": "intake-scope-seed",
+              "itemId": "scope-seed",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：初始范围与约束",
+              "question": "请补充「初始范围与约束」：确认当前痛点、初始范围、关键约束和不做事项。",
+              "expectedAnswer": "需要给出当前痛点、初始范围、明确不做事项、关键约束和依赖。"
+            }
+          ]
+        },
+        "pm-requirements": {
+          "stageId": "pm-requirements",
+          "stageName": "项目经理需求",
+          "owner": "项目经理",
+          "items": [
+            {
+              "id": "target-users",
+              "title": "目标用户与核心场景",
+              "description": "确认目标用户、核心使用场景和主要业务动作。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "success-metrics",
+              "title": "成功指标与验收口径",
+              "description": "确认可量化成功指标、验收口径和统计方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "scope-boundary",
+              "title": "范围边界",
+              "description": "确认本期包含、不包含、后续再做和明确拒绝的内容。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "data-compliance",
+              "title": "数据权限与合规",
+              "description": "确认数据来源、是否保存、访问权限、留存周期和隐私要求。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "external-dependencies",
+              "title": "外部依赖",
+              "description": "确认第三方系统、账号、网络、设备、模型或人工交付依赖。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 5,
+          "missingItems": [
+            {
+              "id": "target-users",
+              "title": "目标用户与核心场景",
+              "description": "确认目标用户、核心使用场景和主要业务动作。"
+            },
+            {
+              "id": "success-metrics",
+              "title": "成功指标与验收口径",
+              "description": "确认可量化成功指标、验收口径和统计方式。"
+            },
+            {
+              "id": "scope-boundary",
+              "title": "范围边界",
+              "description": "确认本期包含、不包含、后续再做和明确拒绝的内容。"
+            },
+            {
+              "id": "data-compliance",
+              "title": "数据权限与合规",
+              "description": "确认数据来源、是否保存、访问权限、留存周期和隐私要求。"
+            },
+            {
+              "id": "external-dependencies",
+              "title": "外部依赖",
+              "description": "确认第三方系统、账号、网络、设备、模型或人工交付依赖。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "pm-requirements-target-users",
+              "itemId": "target-users",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：目标用户与核心场景",
+              "question": "请补充「目标用户与核心场景」：目标用户是谁，核心使用场景是什么，用户在页面中如何完成关键操作。",
+              "expectedAnswer": "需要给出用户角色、核心场景、触发条件、主要操作和页面反馈。"
+            },
+            {
+              "id": "pm-requirements-success-metrics",
+              "itemId": "success-metrics",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：成功指标与验收口径",
+              "question": "请补充「成功指标与验收口径」：误检率、测试样本和通过标准。",
+              "expectedAnswer": "需要给出指标阈值、统计口径、样本范围和验收方式。"
+            },
+            {
+              "id": "pm-requirements-scope-boundary",
+              "itemId": "scope-boundary",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：范围边界",
+              "question": "请补充「范围边界」：本期做什么、不做什么、后续再做什么，以及拒绝范围的理由。",
+              "expectedAnswer": "需要给出本期包含、不包含、后续再做、明确拒绝内容和边界原因。"
+            },
+            {
+              "id": "pm-requirements-data-compliance",
+              "itemId": "data-compliance",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：数据权限与合规",
+              "question": "请补充「数据权限与合规」：数据是否保存、谁能访问、保存多久、是否涉及隐私合规。",
+              "expectedAnswer": "需要给出数据来源、保存范围、访问权限、账号体系、留存周期和隐私要求。"
+            },
+            {
+              "id": "pm-requirements-external-dependencies",
+              "itemId": "external-dependencies",
+              "targetRole": "pm",
+              "targetRoleLabel": "项目经理",
+              "title": "追问：外部依赖",
+              "question": "请补充「外部依赖」：RTSP、账号、网络、硬件、模型和人工交付依赖分别由谁提供。",
+              "expectedAnswer": "需要给出第三方系统、账号权限、网络设备、模型、人工作业和到位时间。"
+            }
+          ]
+        },
+        "prd-approval": {
+          "stageId": "prd-approval",
+          "stageName": "PRD 审批",
+          "owner": "负责人",
+          "items": [
+            {
+              "id": "prd-reviewed",
+              "title": "PRD 完整性确认",
+              "description": "确认 PRD 已覆盖用户、场景、指标、范围、权限和依赖。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "acceptance-criteria",
+              "title": "验收标准确认",
+              "description": "确认验收标准可执行、可核验、可统计。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "priority-confirmed",
+              "title": "优先级与版本确认",
+              "description": "确认本期优先级、版本目标和延期处理原则。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 3,
+          "missingItems": [
+            {
+              "id": "prd-reviewed",
+              "title": "PRD 完整性确认",
+              "description": "确认 PRD 已覆盖用户、场景、指标、范围、权限和依赖。"
+            },
+            {
+              "id": "acceptance-criteria",
+              "title": "验收标准确认",
+              "description": "确认验收标准可执行、可核验、可统计。"
+            },
+            {
+              "id": "priority-confirmed",
+              "title": "优先级与版本确认",
+              "description": "确认本期优先级、版本目标和延期处理原则。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "prd-approval-prd-reviewed",
+              "itemId": "prd-reviewed",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：PRD 完整性确认",
+              "question": "请补充「PRD 完整性确认」：确认 PRD 已覆盖用户、场景、指标、范围、权限和依赖。",
+              "expectedAnswer": "需要给出 PRD 覆盖项确认结论、审批人、版本号和遗留风险。"
+            },
+            {
+              "id": "prd-approval-acceptance-criteria",
+              "itemId": "acceptance-criteria",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：验收标准确认",
+              "question": "请补充「验收标准确认」：确认验收标准可执行、可核验、可统计。",
+              "expectedAnswer": "需要给出可执行验收步骤、通过标准、统计方式和验收负责人。"
+            },
+            {
+              "id": "prd-approval-priority-confirmed",
+              "itemId": "priority-confirmed",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：优先级与版本确认",
+              "question": "请补充「优先级与版本确认」：确认本期优先级、版本目标和延期处理原则。",
+              "expectedAnswer": "需要给出本期优先级、版本目标、延期原则和必须保留功能。"
+            }
+          ]
+        },
+        "architecture": {
+          "stageId": "architecture",
+          "stageName": "架构与数据设计",
+          "owner": "技术负责人",
+          "items": [
+            {
+              "id": "module-boundary",
+              "title": "模块边界",
+              "description": "确认前端、后端、推理服务、数据存储和外部系统边界。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "api-contract",
+              "title": "API 与服务契约",
+              "description": "确认接口路径、请求响应结构、错误码、重试和超时策略。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "data-model",
+              "title": "数据库与数据模型",
+              "description": "确认数据库表、字段、索引、留存策略和迁移方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "model-deployment",
+              "title": "模型版本与部署方式",
+              "description": "确认模型版本、推理硬件、部署形态、输入输出格式和性能目标。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "module-boundary",
+              "title": "模块边界",
+              "description": "确认前端、后端、推理服务、数据存储和外部系统边界。"
+            },
+            {
+              "id": "api-contract",
+              "title": "API 与服务契约",
+              "description": "确认接口路径、请求响应结构、错误码、重试和超时策略。"
+            },
+            {
+              "id": "data-model",
+              "title": "数据库与数据模型",
+              "description": "确认数据库表、字段、索引、留存策略和迁移方式。"
+            },
+            {
+              "id": "model-deployment",
+              "title": "模型版本与部署方式",
+              "description": "确认模型版本、推理硬件、部署形态、输入输出格式和性能目标。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "architecture-module-boundary",
+              "itemId": "module-boundary",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：模块边界",
+              "question": "请补充「模块边界」：确认前端、后端、推理服务、数据存储和外部系统边界。",
+              "expectedAnswer": "需要给出前端、后端、推理服务、数据存储、外部系统边界和责任人。"
+            },
+            {
+              "id": "architecture-api-contract",
+              "itemId": "api-contract",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：API 与服务契约",
+              "question": "请补充「API 与服务契约」：确认接口路径、请求响应结构、错误码、重试和超时策略。",
+              "expectedAnswer": "需要给出接口路径、请求响应结构、错误码、超时、重试和幂等要求。"
+            },
+            {
+              "id": "architecture-data-model",
+              "itemId": "data-model",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：数据库与数据模型",
+              "question": "请补充「数据库与数据模型」：确认数据库表、字段、索引、留存策略和迁移方式。",
+              "expectedAnswer": "需要给出数据库表、字段、索引、迁移方式、留存策略和敏感字段处理。"
+            },
+            {
+              "id": "architecture-model-deployment",
+              "itemId": "model-deployment",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：模型版本与部署方式",
+              "question": "请补充「模型版本与部署方式」：确认模型版本、推理硬件、部署形态、输入输出格式和性能目标。",
+              "expectedAnswer": "需要给出模型版本、推理硬件、部署形态、输入输出格式和性能目标。"
+            }
+          ]
+        },
+        "ops-requirements": {
+          "stageId": "ops-requirements",
+          "stageName": "运维需求",
+          "owner": "运维",
+          "items": [
+            {
+              "id": "rtsp-access",
+              "title": "RTSP 接入凭据",
+              "description": "确认摄像头地址、账号密码、网络访问、防火墙和断流重连要求。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "runtime-environment",
+              "title": "服务器与运行环境",
+              "description": "确认 CPU/GPU、内存、显存、驱动、容器、端口和环境变量。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "service-operations",
+              "title": "启停重启与回滚",
+              "description": "确认服务启动、停止、重启、回滚和故障恢复方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "monitoring-logging",
+              "title": "日志监控与告警",
+              "description": "确认日志路径、监控指标、告警方式和异常页面提示。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "rtsp-access",
+              "title": "RTSP 接入凭据",
+              "description": "确认摄像头地址、账号密码、网络访问、防火墙和断流重连要求。"
+            },
+            {
+              "id": "runtime-environment",
+              "title": "服务器与运行环境",
+              "description": "确认 CPU/GPU、内存、显存、驱动、容器、端口和环境变量。"
+            },
+            {
+              "id": "service-operations",
+              "title": "启停重启与回滚",
+              "description": "确认服务启动、停止、重启、回滚和故障恢复方式。"
+            },
+            {
+              "id": "monitoring-logging",
+              "title": "日志监控与告警",
+              "description": "确认日志路径、监控指标、告警方式和异常页面提示。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "ops-requirements-rtsp-access",
+              "itemId": "rtsp-access",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：RTSP 接入凭据",
+              "question": "请补充「RTSP 接入凭据」：摄像头 RTSP 地址、账号密码提供方式、网络访问和断流重连要求。",
+              "expectedAnswer": "需要给出 RTSP 地址、账号密码提供方式、网络连通性、防火墙和断流重连要求。"
+            },
+            {
+              "id": "ops-requirements-runtime-environment",
+              "itemId": "runtime-environment",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：服务器与运行环境",
+              "question": "请补充「服务器与运行环境」：CPU/GPU、内存、显存、驱动、容器、端口和环境变量。",
+              "expectedAnswer": "需要给出 CPU/GPU、内存、显存、驱动、容器、端口和环境变量。"
+            },
+            {
+              "id": "ops-requirements-service-operations",
+              "itemId": "service-operations",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：启停重启与回滚",
+              "question": "请补充「启停重启与回滚」：确认服务启动、停止、重启、回滚和故障恢复方式。",
+              "expectedAnswer": "需要给出服务启动、停止、重启、回滚、故障恢复和负责人。"
+            },
+            {
+              "id": "ops-requirements-monitoring-logging",
+              "itemId": "monitoring-logging",
+              "targetRole": "ops",
+              "targetRoleLabel": "运维",
+              "title": "追问：日志监控与告警",
+              "question": "请补充「日志监控与告警」：确认日志路径、监控指标、告警方式和异常页面提示。",
+              "expectedAnswer": "需要给出日志路径、监控指标、告警方式、异常页面提示和排障入口。"
+            }
+          ]
+        },
+        "development": {
+          "stageId": "development",
+          "stageName": "自动开发",
+          "owner": "AI 开发",
+          "items": [
+            {
+              "id": "task-implementation",
+              "title": "开发任务实现范围",
+              "description": "确认本轮代码变更范围、涉及模块和不触碰的边界。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "self-test",
+              "title": "开发自测",
+              "description": "确认单元测试、构建、静态检查和本地运行结果。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "change-summary",
+              "title": "变更说明",
+              "description": "确认变更摘要、文件清单、验证命令和已知限制。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 3,
+          "missingItems": [
+            {
+              "id": "task-implementation",
+              "title": "开发任务实现范围",
+              "description": "确认本轮代码变更范围、涉及模块和不触碰的边界。"
+            },
+            {
+              "id": "self-test",
+              "title": "开发自测",
+              "description": "确认单元测试、构建、静态检查和本地运行结果。"
+            },
+            {
+              "id": "change-summary",
+              "title": "变更说明",
+              "description": "确认变更摘要、文件清单、验证命令和已知限制。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "development-task-implementation",
+              "itemId": "task-implementation",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：开发任务实现范围",
+              "question": "请补充「开发任务实现范围」：确认本轮代码变更范围、涉及模块和不触碰的边界。",
+              "expectedAnswer": "需要给出本轮代码变更范围、涉及模块、不触碰边界和完成定义。"
+            },
+            {
+              "id": "development-self-test",
+              "itemId": "self-test",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：开发自测",
+              "question": "请补充「开发自测」：确认单元测试、构建、静态检查和本地运行结果。",
+              "expectedAnswer": "需要给出单元测试、构建、静态检查、本地运行结果和失败项处理。"
+            },
+            {
+              "id": "development-change-summary",
+              "itemId": "change-summary",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：变更说明",
+              "question": "请补充「变更说明」：确认变更摘要、文件清单、验证命令和已知限制。",
+              "expectedAnswer": "需要给出变更摘要、文件清单、验证命令、已知限制和回滚建议。"
+            }
+          ]
+        },
+        "review": {
+          "stageId": "review",
+          "stageName": "代码/安全/性能 Review",
+          "owner": "技术负责人",
+          "items": [
+            {
+              "id": "code-quality",
+              "title": "代码质量",
+              "description": "确认可维护性、边界处理、错误处理和关键路径质量。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "security",
+              "title": "安全检查",
+              "description": "确认密钥、权限、输入校验、依赖和敏感数据处理风险。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "performance",
+              "title": "性能检查",
+              "description": "确认关键接口、推理延迟、资源消耗和降级策略。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "qa-handoff",
+              "title": "测试交接",
+              "description": "确认测试入口、测试数据、覆盖范围和不可测事项。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "code-quality",
+              "title": "代码质量",
+              "description": "确认可维护性、边界处理、错误处理和关键路径质量。"
+            },
+            {
+              "id": "security",
+              "title": "安全检查",
+              "description": "确认密钥、权限、输入校验、依赖和敏感数据处理风险。"
+            },
+            {
+              "id": "performance",
+              "title": "性能检查",
+              "description": "确认关键接口、推理延迟、资源消耗和降级策略。"
+            },
+            {
+              "id": "qa-handoff",
+              "title": "测试交接",
+              "description": "确认测试入口、测试数据、覆盖范围和不可测事项。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "review-code-quality",
+              "itemId": "code-quality",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：代码质量",
+              "question": "请补充「代码质量」：确认可维护性、边界处理、错误处理和关键路径质量。",
+              "expectedAnswer": "需要给出可维护性、边界处理、错误处理、关键路径质量和遗留问题。"
+            },
+            {
+              "id": "review-security",
+              "itemId": "security",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：安全检查",
+              "question": "请补充「安全检查」：确认密钥、权限、输入校验、依赖和敏感数据处理风险。",
+              "expectedAnswer": "需要给出密钥、权限、输入校验、依赖、敏感数据处理和安全风险结论。"
+            },
+            {
+              "id": "review-performance",
+              "itemId": "performance",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：性能检查",
+              "question": "请补充「性能检查」：确认关键接口、推理延迟、资源消耗和降级策略。",
+              "expectedAnswer": "需要给出关键接口、推理延迟、资源消耗、并发边界和降级策略。"
+            },
+            {
+              "id": "review-qa-handoff",
+              "itemId": "qa-handoff",
+              "targetRole": "tech-lead",
+              "targetRoleLabel": "技术负责人",
+              "title": "追问：测试交接",
+              "question": "请补充「测试交接」：确认测试入口、测试数据、覆盖范围和不可测事项。",
+              "expectedAnswer": "需要给出测试入口、测试数据、覆盖范围、不可测事项和测试负责人。"
+            }
+          ]
+        },
+        "qa": {
+          "stageId": "qa",
+          "stageName": "测试",
+          "owner": "测试",
+          "items": [
+            {
+              "id": "test-samples",
+              "title": "测试样本与时长",
+              "description": "确认有行人、无人、多人、遮挡、弱光和断流样本及测试时长。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "false-positive-metric",
+              "title": "误检率统计口径",
+              "description": "确认总检测次数、误检次数、人工标注和低于 30% 的判定方式。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "browser-scope",
+              "title": "浏览器与环境范围",
+              "description": "确认桌面浏览器范围、分辨率、网络条件和测试环境。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "defect-record",
+              "title": "缺陷记录规则",
+              "description": "确认缺陷编号、严重级别、复现步骤、截图和回归要求。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "test-samples",
+              "title": "测试样本与时长",
+              "description": "确认有行人、无人、多人、遮挡、弱光和断流样本及测试时长。"
+            },
+            {
+              "id": "false-positive-metric",
+              "title": "误检率统计口径",
+              "description": "确认总检测次数、误检次数、人工标注和低于 30% 的判定方式。"
+            },
+            {
+              "id": "browser-scope",
+              "title": "浏览器与环境范围",
+              "description": "确认桌面浏览器范围、分辨率、网络条件和测试环境。"
+            },
+            {
+              "id": "defect-record",
+              "title": "缺陷记录规则",
+              "description": "确认缺陷编号、严重级别、复现步骤、截图和回归要求。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "qa-test-samples",
+              "itemId": "test-samples",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：测试样本与时长",
+              "question": "请补充「测试样本与时长」：有行人、无行人、多人、遮挡、弱光和断流样本分别如何准备。",
+              "expectedAnswer": "需要给出样本清单、每类场景时长、样本来源、人工标注人和覆盖场景。"
+            },
+            {
+              "id": "qa-false-positive-metric",
+              "itemId": "false-positive-metric",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：误检率统计口径",
+              "question": "请补充「误检率统计口径」：如何统计总检测次数、误检次数、人工标注和低于 30% 的判定。",
+              "expectedAnswer": "需要给出总检测次数、误检次数、人工标注方式、统计窗口和低于 30% 的判定方式。"
+            },
+            {
+              "id": "qa-browser-scope",
+              "itemId": "browser-scope",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：浏览器与环境范围",
+              "question": "请补充「浏览器与环境范围」：需要覆盖哪些桌面浏览器、分辨率、网络条件和测试环境。",
+              "expectedAnswer": "需要给出桌面浏览器范围、分辨率、网络条件、测试环境和兼容性结论。"
+            },
+            {
+              "id": "qa-defect-record",
+              "itemId": "defect-record",
+              "targetRole": "qa",
+              "targetRoleLabel": "测试",
+              "title": "追问：缺陷记录规则",
+              "question": "请补充「缺陷记录规则」：确认缺陷编号、严重级别、复现步骤、截图和回归要求。",
+              "expectedAnswer": "需要给出缺陷编号、严重级别、复现步骤、截图证据和回归要求。"
+            }
+          ]
+        },
+        "defect-loop": {
+          "stageId": "defect-loop",
+          "stageName": "缺陷回归",
+          "owner": "AI 开发 / 测试",
+          "items": [
+            {
+              "id": "defect-scope",
+              "title": "缺陷范围确认",
+              "description": "确认每个缺陷影响范围、复现路径、严重级别和负责人。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "fix-plan",
+              "title": "修复计划",
+              "description": "确认修复策略、影响模块、回滚方式和验证命令。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "regression",
+              "title": "回归验证",
+              "description": "确认补充回归用例、通过结果和关闭条件。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 3,
+          "missingItems": [
+            {
+              "id": "defect-scope",
+              "title": "缺陷范围确认",
+              "description": "确认每个缺陷影响范围、复现路径、严重级别和负责人。"
+            },
+            {
+              "id": "fix-plan",
+              "title": "修复计划",
+              "description": "确认修复策略、影响模块、回滚方式和验证命令。"
+            },
+            {
+              "id": "regression",
+              "title": "回归验证",
+              "description": "确认补充回归用例、通过结果和关闭条件。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "defect-loop-defect-scope",
+              "itemId": "defect-scope",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：缺陷范围确认",
+              "question": "请补充「缺陷范围确认」：确认每个缺陷影响范围、复现路径、严重级别和负责人。",
+              "expectedAnswer": "需要给出每个缺陷影响范围、复现路径、严重级别和责任人。"
+            },
+            {
+              "id": "defect-loop-fix-plan",
+              "itemId": "fix-plan",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：修复计划",
+              "question": "请补充「修复计划」：确认修复策略、影响模块、回滚方式和验证命令。",
+              "expectedAnswer": "需要给出修复策略、影响模块、回滚方式、验证命令和预计完成时间。"
+            },
+            {
+              "id": "defect-loop-regression",
+              "itemId": "regression",
+              "targetRole": "ai-dev",
+              "targetRoleLabel": "AI 开发",
+              "title": "追问：回归验证",
+              "question": "请补充「回归验证」：确认补充回归用例、通过结果和关闭条件。",
+              "expectedAnswer": "需要给出补充回归用例、通过结果、关闭条件和剩余风险。"
+            }
+          ]
+        },
+        "acceptance": {
+          "stageId": "acceptance",
+          "stageName": "最终验收",
+          "owner": "负责人",
+          "items": [
+            {
+              "id": "delivery-package",
+              "title": "交付包完整性",
+              "description": "确认 PRD、实现摘要、测试报告、部署说明和风险清单齐备。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "qa-evidence",
+              "title": "测试证据",
+              "description": "确认测试样本、执行时间、统计结果和缺陷关闭证据可核验。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "ops-handoff",
+              "title": "运维交接",
+              "description": "确认部署、日志、监控、告警、启停重启和应急联系人。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            },
+            {
+              "id": "archive-version",
+              "title": "归档版本",
+              "description": "确认验收版本号、归档时间、签收人和后续待办。",
+              "required": true,
+              "value": "",
+              "status": "missing",
+              "confirmedBy": "",
+              "confirmedAt": ""
+            }
+          ],
+          "status": "incomplete",
+          "completedCount": 0,
+          "totalCount": 4,
+          "missingItems": [
+            {
+              "id": "delivery-package",
+              "title": "交付包完整性",
+              "description": "确认 PRD、实现摘要、测试报告、部署说明和风险清单齐备。"
+            },
+            {
+              "id": "qa-evidence",
+              "title": "测试证据",
+              "description": "确认测试样本、执行时间、统计结果和缺陷关闭证据可核验。"
+            },
+            {
+              "id": "ops-handoff",
+              "title": "运维交接",
+              "description": "确认部署、日志、监控、告警、启停重启和应急联系人。"
+            },
+            {
+              "id": "archive-version",
+              "title": "归档版本",
+              "description": "确认验收版本号、归档时间、签收人和后续待办。"
+            }
+          ],
+          "followups": [
+            {
+              "id": "acceptance-delivery-package",
+              "itemId": "delivery-package",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：交付包完整性",
+              "question": "请补充「交付包完整性」：确认 PRD、实现摘要、测试报告、部署说明和风险清单齐备。",
+              "expectedAnswer": "需要给出 PRD、实现摘要、测试报告、部署说明和风险清单。"
+            },
+            {
+              "id": "acceptance-qa-evidence",
+              "itemId": "qa-evidence",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：测试证据",
+              "question": "请补充「测试证据」：确认测试样本、执行时间、统计结果和缺陷关闭证据可核验。",
+              "expectedAnswer": "需要给出测试样本、执行时间、统计结果、缺陷关闭证据和验收结论。"
+            },
+            {
+              "id": "acceptance-ops-handoff",
+              "itemId": "ops-handoff",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：运维交接",
+              "question": "请补充「运维交接」：确认部署、日志、监控、告警、启停重启和应急联系人。",
+              "expectedAnswer": "需要给出部署、日志、监控、告警、启停重启和应急联系人。"
+            },
+            {
+              "id": "acceptance-archive-version",
+              "itemId": "archive-version",
+              "targetRole": "owner",
+              "targetRoleLabel": "负责人",
+              "title": "追问：归档版本",
+              "question": "请补充「归档版本」：确认验收版本号、归档时间、签收人和后续待办。",
+              "expectedAnswer": "需要给出验收版本号、归档时间、签收人、后续待办和资料位置。"
+            }
+          ]
+        }
+      },
+      "stageRiskRegister": {
+        "intake": {
+          "stageId": "intake",
+          "stageName": "项目入口",
+          "owner": "负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "业务目标不够稳定",
+              "detail": "项目入口只记录名称、负责人和概要，如果目标、优先级或干系人变化，后续阶段会反复返工。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少项目约束字段",
+              "detail": "当前还没有预算、截止时间、优先级、干系人和审批链字段。"
+            }
+          ],
+          "recommendedActions": [
+            "负责人在进入项目经理需求前补充目标、优先级和关键干系人。"
+          ]
+        },
+        "pm-requirements": {
+          "stageId": "pm-requirements",
+          "stageName": "项目经理需求",
+          "owner": "项目经理",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "需求回答不完整",
+              "detail": "用户、场景、指标、范围、数据权限或外部依赖缺失时，PRD 会出现不可验收内容。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺项追问需要关闭追踪",
+              "detail": "系统已能按缺失项生成追问建议，仍需要把追问沉淀为可指派、可关闭、可复核的阶段待办。"
+            }
+          ],
+          "recommendedActions": [
+            "项目经理先跑 AI 需求评审，再按缺项待办逐项补齐确认内容。"
+          ]
+        },
+        "prd-approval": {
+          "stageId": "prd-approval",
+          "stageName": "PRD 审批",
+          "owner": "负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "审批只确认文档",
+              "detail": "如果负责人只看 PRD 文本，没有检查验收标准和非目标，后续技术阶段容易扩大范围。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少审批签名和版本冻结",
+              "detail": "当前只记录流转历史，还没有正式的 PRD 版本号、审批人签名和差异对比。"
+            }
+          ],
+          "recommendedActions": [
+            "审批意见中明确本期范围、验收口径和暂不处理事项。"
+          ]
+        },
+        "architecture": {
+          "stageId": "architecture",
+          "stageName": "架构与数据设计",
+          "owner": "技术负责人",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "技术方案无法落地",
+              "detail": "接口、数据模型、异常策略和性能目标不清时，自动开发会生成不可联调的代码。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "数据库和接口尚未结构化",
+              "detail": "当前技术方案是 Markdown 产物，还没有结构化 API、表结构和模块任务模型。"
+            }
+          ],
+          "recommendedActions": [
+            "技术负责人确认接口契约、数据结构、异常策略和性能约束后再进入开发。"
+          ]
+        },
+        "ops-requirements": {
+          "stageId": "ops-requirements",
+          "stageName": "运维需求",
+          "owner": "运维",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "运行环境不可用",
+              "detail": "服务器、网络、密钥、依赖服务或日志权限未确认时，开发完成后也无法部署验证。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "环境需求尚未自动校验",
+              "detail": "当前只生成运维需求清单，还没有自动连通性检查、配置校验和部署前检查。"
+            }
+          ],
+          "recommendedActions": [
+            "运维在开发前确认服务器规格、环境变量、依赖服务、日志路径和回滚方式。"
+          ]
+        },
+        "development": {
+          "stageId": "development",
+          "stageName": "自动开发",
+          "owner": "AI 开发",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "自动开发缺少仓库级上下文",
+              "detail": "如果没有明确任务、代码边界和验收测试，AI coding 可能改错模块或遗漏关键路径。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "自动开发执行器尚未接入",
+              "detail": "当前版本先维护流程和交接产物，还没有真正创建分支、修改代码、生成 PR 或提交变更。"
+            }
+          ],
+          "recommendedActions": [
+            "开发阶段需要接入任务拆分、代码生成、单测、变更摘要和失败回滚机制。"
+          ]
+        },
+        "review": {
+          "stageId": "review",
+          "stageName": "代码/安全/性能 Review",
+          "owner": "技术负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "Review 覆盖不完整",
+              "detail": "只做人工浏览或单次 AI review，容易漏掉安全、性能和边界条件问题。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少安全和性能检查器",
+              "detail": "当前流程有 Review 阶段，但还没有固定的 SAST、依赖审计、性能基准和检查报告。"
+            }
+          ],
+          "recommendedActions": [
+            "Review 阶段至少运行测试、构建、依赖审计和关键路径代码审查。"
+          ]
+        },
+        "qa": {
+          "stageId": "qa",
+          "stageName": "测试",
+          "owner": "测试",
+          "riskLevel": "high",
+          "potentialRisks": [
+            {
+              "title": "测试样本不足",
+              "detail": "测试数据、场景覆盖、失败复现和统计口径不清时，测试结论不可复核。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "自动测试执行尚未接入",
+              "detail": "当前能生成测试计划，但还没有真正执行测试、收集结果和形成缺陷闭环。"
+            }
+          ],
+          "recommendedActions": [
+            "测试阶段必须沉淀用例、执行记录、缺陷列表和回归结果。"
+          ]
+        },
+        "defect-loop": {
+          "stageId": "defect-loop",
+          "stageName": "缺陷回归",
+          "owner": "AI 开发 / 测试",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "缺陷修复引入回归",
+              "detail": "修复缺陷后如果没有补充回归测试，可能解决一个问题但破坏已有功能。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺陷没有结构化追踪",
+              "detail": "当前只有阶段流转，没有缺陷编号、严重级别、复现步骤和修复状态。"
+            }
+          ],
+          "recommendedActions": [
+            "每个缺陷必须关联复现步骤、修复提交、回归用例和关闭结论。"
+          ]
+        },
+        "acceptance": {
+          "stageId": "acceptance",
+          "stageName": "最终验收",
+          "owner": "负责人",
+          "riskLevel": "medium",
+          "potentialRisks": [
+            {
+              "title": "交付结果不可追溯",
+              "detail": "如果没有汇总 PRD、代码变更、测试报告和运维交接，负责人难以判断是否可验收。"
+            }
+          ],
+          "functionalGaps": [
+            {
+              "title": "缺少最终交付包",
+              "detail": "当前没有自动生成发布说明、验收报告、部署说明和后续待办清单。"
+            }
+          ],
+          "recommendedActions": [
+            "最终验收前汇总需求、实现、测试、风险和运维交接结果。"
+          ]
+        }
+      },
+      "repositoryConfig": {
+        "status": "incomplete",
+        "repositoryUrl": "",
+        "localPath": "",
+        "baseBranch": "main",
+        "targetBranch": "",
+        "executionMode": "codex-local",
+        "verificationCommands": [],
+        "notes": "",
+        "configuredAt": "",
+        "configuredBy": "",
+        "missingFields": [
+          "repositoryUrl",
+          "targetBranch"
+        ]
+      },
+      "repositoryBootstrap": null,
+      "repositoryInspection": null,
+      "branchPreparation": null,
+      "agentExecutionPackage": null,
+      "developmentRun": null,
+      "codeReviewReport": null,
+      "qaEvidence": null,
+      "qaRun": null,
+      "defectFixPackage": null,
+      "acceptancePackage": {
+        "status": "not-generated",
+        "signoffStatus": "not-started",
+        "signedOffBy": "",
+        "signedOffAt": "",
+        "signoffOpinion": "",
+        "archiveVersion": "",
+        "generatedAt": "",
+        "generatedBy": "",
+        "summary": "最终验收包尚未生成。",
+        "deliverables": [],
+        "qa": {
+          "status": "missing",
+          "passedCount": 0,
+          "totalCount": 0,
+          "commitHash": "",
+          "evidenceStatus": "incomplete",
+          "sampleSet": "",
+          "durationMinutes": 0,
+          "environment": "",
+          "browserScope": ""
+        },
+        "ops": {
+          "status": "missing",
+          "artifactStageId": "ops-requirements",
+          "evidence": "运维需求和交接说明尚未归档。"
+        },
+        "residualRisks": [],
+        "blockers": [
+          "最终验收包尚未生成。"
+        ],
+        "nextActions": [
+          "QA 通过后生成最终验收包。"
+        ]
+      },
+      "ownerEscalations": {
+        "owner-escalation-pm-客户门户升级-a65ae74f": {
+          "id": "owner-escalation-pm-客户门户升级-a65ae74f",
+          "status": "sent",
+          "sentAt": "2026-06-24T02:49:48.268Z",
+          "sentBy": "AA",
+          "sentByUserId": "owner-aa",
+          "role": "pm",
+          "roleLabel": "PM",
+          "recipientUserId": "pm-lin",
+          "recipientName": "林项目经理",
+          "projectId": "客户门户升级-a65ae74f",
+          "projectName": "客户门户升级",
+          "stageId": "pm-requirements",
+          "stageName": "项目经理需求",
+          "escalationLevel": "escalated",
+          "overdueHours": 134.56,
+          "subject": "Escalate PM handoff: 客户门户升级 overdue 134.56h",
+          "body": "PM: 客户门户升级 is overdue by 134.56h. PM should resolve requirement blockers and update the PRD inputs.",
+          "note": "Sent from owner cockpit."
+        }
+      }
+    }
+  ]
+}

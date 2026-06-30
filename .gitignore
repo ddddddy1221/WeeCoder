@@ -1,0 +1,25 @@
+.env
+.env.local
+.env.*.local
+__pycache__/
+*.pyc
+workers/__pycache__/
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Runtime output
+logs/
+*.log
+
+# Local/generated project workspaces
+data/workspaces/
+
+# Local model weights
+*.pt
+
+# Codex/local tool state
+.codex/
+.superpowers/
