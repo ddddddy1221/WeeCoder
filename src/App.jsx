@@ -18,6 +18,7 @@ import {
 import { createRoleInbox, filterRoleInbox } from './shared/roleInbox.js';
 import { createRoleWorkbench } from './shared/roleWorkbench.js';
 import { createProjectTaskLedger } from './shared/taskLedger.js';
+import { resolvePipelineFlowActionCommand } from './shared/pipelineFlowActionCommands.js';
 import { APP_USERS, selectUserForRole } from './shared/users.js';
 import { DEFAULT_ORGANIZATION_ID } from './shared/platform.js';
 import { AppShell } from './ui/AppShell.jsx';
@@ -1103,6 +1104,46 @@ export default function App() {
     }
   }
 
+  async function runPipelineFlowAction(action, pipelineStage) {
+    const command = resolvePipelineFlowActionCommand(action, pipelineStage);
+    if (!selectedProject) {
+      return {
+        ...command,
+        message: '请先选择一个项目。',
+      };
+    }
+
+    if (command.stageId) {
+      setViewStageId(command.stageId);
+      setActiveProjectTab(getWorkspaceTabForStage(command.stageId));
+    }
+
+    if (command.handler === 'openStageDetail' || command.handler === 'inspectPrerequisite') {
+      setExpandedDeliverySections((current) => ({
+        ...current,
+        task: true,
+      }));
+      return command;
+    }
+
+    if (command.handler === 'generatePrd') {
+      await generatePrd();
+      return command;
+    }
+
+    if (command.handler === 'generateDevelopmentPackage') {
+      await generateDevelopmentPackage();
+      return command;
+    }
+
+    if (command.handler === 'advanceStage') {
+      await runStageAction('advance');
+      return command;
+    }
+
+    return command;
+  }
+
   async function saveRepositoryConfig(event) {
     event.preventDefault();
     if (!selectedProject) {
@@ -1946,6 +1987,8 @@ export default function App() {
           <Suspense fallback={<LazyWorkspaceFallback label="交付控制" />}>
             <ProjectWorkspace
               activeTab={activeProjectTab}
+              flowActionBusy={busy}
+              onFlowAction={runPipelineFlowAction}
               onStageChange={(stageId) => {
                 setViewStageId(stageId);
                 setActiveProjectTab(getWorkspaceTabForStage(stageId));

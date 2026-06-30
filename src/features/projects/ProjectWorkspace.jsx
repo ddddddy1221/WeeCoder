@@ -18,6 +18,8 @@ export const PROJECT_WORKSPACE_TABS = Object.freeze([
 export function ProjectWorkspace({
   activeTab = 'overview',
   children,
+  flowActionBusy = false,
+  onFlowAction,
   onStageChange,
   onTabChange,
   project,
@@ -77,7 +79,9 @@ export function ProjectWorkspace({
         currentStage={currentStage}
         detail={stageDeliveryDetail}
         focusSummary={focusSummary}
+        flowActionBusy={flowActionBusy}
         isExpanded={isStageDetailExpanded}
+        onFlowAction={onFlowAction}
         onToggle={() => setIsStageDetailExpanded((expanded) => !expanded)}
         onStageChange={onStageChange}
         pipelineView={pipelineView}
@@ -115,7 +119,9 @@ function ProjectWorkspaceFocusPanel({
   currentStage,
   detail,
   focusSummary,
+  flowActionBusy,
   isExpanded,
+  onFlowAction,
   onToggle,
   onStageChange,
   pipelineView,
@@ -198,7 +204,9 @@ function ProjectWorkspaceFocusPanel({
       <ActivePipelineBandSummary pipelineView={pipelineView} />
       <PipelineStageWorkbench
         detail={detail}
+        flowActionBusy={flowActionBusy}
         isExpanded={isExpanded}
+        onFlowAction={onFlowAction}
         onOpenDetail={onToggle}
         pipelineStage={pipelineView.activeStage}
       />
@@ -280,7 +288,15 @@ function ActivePipelineBandSummary({ pipelineView }) {
   );
 }
 
-function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStage }) {
+function PipelineStageWorkbench({
+  detail,
+  flowActionBusy = false,
+  isExpanded,
+  onFlowAction,
+  onOpenDetail,
+  pipelineStage,
+}) {
+  const [flowActionFeedback, setFlowActionFeedback] = useState(null);
   if (!pipelineStage) {
     return null;
   }
@@ -293,6 +309,42 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
         statusLabel: '需确认',
       }));
   const flowActions = Array.isArray(pipelineStage.flowActions) ? pipelineStage.flowActions : [];
+
+  async function handleFlowAction(action) {
+    if (!onFlowAction) {
+      setFlowActionFeedback({
+        actionId: action.id,
+        message: '该动作暂未接入执行入口。',
+        status: 'failed',
+        title: `暂未接入：${action.label}`,
+      });
+      return;
+    }
+
+    setFlowActionFeedback({
+      actionId: action.id,
+      message: '',
+      status: 'running',
+      title: `正在处理：${action.label}`,
+    });
+
+    try {
+      const result = await onFlowAction?.(action, pipelineStage);
+      setFlowActionFeedback({
+        actionId: action.id,
+        message: result?.message || '',
+        status: 'submitted',
+        title: result?.successMessage || `已提交：${action.label}`,
+      });
+    } catch (error) {
+      setFlowActionFeedback({
+        actionId: action.id,
+        message: error?.message || '请稍后重试。',
+        status: 'failed',
+        title: `处理失败：${action.label}`,
+      });
+    }
+  }
 
   return (
     <section
@@ -335,11 +387,23 @@ function PipelineStageWorkbench({ detail, isExpanded, onOpenDetail, pipelineStag
           <span>建议动作</span>
           <div>
             {flowActions.map((action) => (
-              <button className={action.type || 'manual'} key={action.id} type="button">
+              <button
+                className={action.type || 'manual'}
+                disabled={flowActionBusy || flowActionFeedback?.status === 'running'}
+                key={action.id}
+                onClick={() => handleFlowAction(action)}
+                type="button"
+              >
                 {action.label}
               </button>
             ))}
           </div>
+          {flowActionFeedback ? (
+            <p className={`pipeline-stage-workbench-action-feedback ${flowActionFeedback.status}`}>
+              <strong>{flowActionFeedback.title}</strong>
+              {flowActionFeedback.message ? <small>{flowActionFeedback.message}</small> : null}
+            </p>
+          ) : null}
         </article>
       ) : null}
       <button

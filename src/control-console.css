@@ -2989,6 +2989,39 @@ textarea:focus-visible,
   color: #1d4ed8;
 }
 
+.pipeline-stage-workbench-actions button:disabled {
+  cursor: progress;
+  opacity: 0.62;
+  transform: none;
+}
+
+.pipeline-stage-workbench-action-feedback {
+  background: #ffffff;
+  border: 1px solid #dbe7e8;
+  border-radius: 7px;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 8px;
+}
+
+.pipeline-stage-workbench-action-feedback strong {
+  color: var(--console-text);
+  font-size: 11px;
+}
+
+.pipeline-stage-workbench-action-feedback small {
+  color: var(--console-text-secondary);
+}
+
+.pipeline-stage-workbench-action-feedback.submitted {
+  border-color: #99f6e4;
+}
+
+.pipeline-stage-workbench-action-feedback.failed {
+  border-color: #fecdd3;
+}
+
 .pipeline-stage-workbench > button {
   align-self: center;
   min-height: 34px;

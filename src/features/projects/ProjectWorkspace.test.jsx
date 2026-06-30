@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { ProjectWorkspace } from './ProjectWorkspace.jsx';
 
@@ -196,6 +196,63 @@ describe('ProjectWorkspace', () => {
     expect(
       within(workbench).getByText('产品或设计确认核心用户路径和关键页面交互。'),
     ).toBeInTheDocument();
+  });
+
+  test('runs a suggested pipeline action from the stage workbench', async () => {
+    const onFlowAction = vi.fn().mockResolvedValue({
+      message: '请在阶段确认区补齐线框图或截图。',
+    });
+    const project = {
+      id: 'stage-action-demo',
+      name: '阶段动作项目',
+      summary: '验证建议动作可以从阶段工作台执行。',
+      health: 'on-track',
+      currentStageId: 'architecture',
+      currentStageName: '架构与数据设计',
+      currentOwner: '技术负责人',
+      stageProgress: 4,
+      totalStages: 10,
+      artifacts: {
+        architecture: '# 设计产物\n\n页面流程已生成。\n\n交互说明已补齐。',
+      },
+      stageConfirmations: {
+        architecture: {
+          missingItems: [{ id: 'wireframe', title: '线框图或截图' }],
+        },
+      },
+      stages: createPipelineWorkflowStages('architecture'),
+    };
+
+    render(
+      <ProjectWorkspace
+        activeTab="overview"
+        onFlowAction={onFlowAction}
+        onStageChange={vi.fn()}
+        onTabChange={vi.fn()}
+        project={project}
+        selectedStageId="architecture"
+      >
+        <div />
+      </ProjectWorkspace>,
+    );
+
+    const workbench = screen.getByLabelText('当前业务阶段工作台');
+    fireEvent.click(within(workbench).getByRole('button', { name: '补齐线框图或截图' }));
+
+    expect(onFlowAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'complete-artifact-wireframe',
+        label: '补齐线框图或截图',
+      }),
+      expect.objectContaining({
+        id: 'ui-interaction-design',
+        workflowStageIds: ['architecture'],
+      }),
+    );
+    await waitFor(() => {
+      expect(within(workbench).getByText('已提交：补齐线框图或截图')).toBeInTheDocument();
+    });
+    expect(within(workbench).getByText('请在阶段确认区补齐线框图或截图。')).toBeInTheDocument();
   });
 
   test('shows stale downstream artifact state when the PRD version is stale', () => {
