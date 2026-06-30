@@ -250,12 +250,21 @@ function ActivePipelineBandSummary({ pipelineView }) {
         <strong>{`当前业务带：${band.label}`}</strong>
         <small>{`${band.stages.length} 个阶段 · ${band.completeCount} 个已完成`}</small>
       </div>
-      <ul>
+      <div className="active-pipeline-band-metrics">
+        <span>{`必要产物 ${band.artifactCount || 0}`}</span>
+        <span>{`人工闸口 ${band.humanGateCount || 0}`}</span>
+      </div>
+      <ul className="active-pipeline-band-stages">
         {band.stages.map((stage) => (
           <li key={stage.id}>{stage.name}</li>
         ))}
       </ul>
-      <p>先补齐当前业务带的必要产物，再推动下一阶段流转。</p>
+      <ul className="active-pipeline-band-artifacts">
+        {(band.requiredArtifacts || []).map((artifact) => (
+          <li key={artifact}>{artifact}</li>
+        ))}
+      </ul>
+      <p>{band.nextAction}</p>
     </section>
   );
 }

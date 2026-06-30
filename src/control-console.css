@@ -2682,7 +2682,7 @@ textarea:focus-visible,
   display: grid;
   gap: 10px;
   grid-column: 1 / -1;
-  grid-template-columns: minmax(180px, 0.42fr) minmax(260px, 1fr) minmax(260px, 0.72fr);
+  grid-template-columns: minmax(180px, 0.38fr) minmax(150px, 0.28fr) minmax(260px, 0.7fr) minmax(260px, 0.72fr);
   padding: 10px 12px;
 }
 
@@ -2704,6 +2704,23 @@ textarea:focus-visible,
   font-weight: 900;
 }
 
+.active-pipeline-band-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.active-pipeline-band-metrics span {
+  background: #ffffff;
+  border: 1px solid #d7e5e7;
+  border-radius: 999px;
+  color: var(--console-primary);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
 .active-pipeline-band-summary ul {
   display: flex;
   flex-wrap: wrap;
@@ -2722,6 +2739,15 @@ textarea:focus-visible,
   font-size: 11px;
   font-weight: 900;
   padding: 5px 8px;
+}
+
+.active-pipeline-band-artifacts {
+  grid-column: 1 / -2;
+}
+
+.active-pipeline-band-artifacts li {
+  background: #eef9f7;
+  border-color: #c6e7e2;
 }
 
 .active-pipeline-band-summary > p {

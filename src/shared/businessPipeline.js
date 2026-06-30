@@ -240,14 +240,21 @@ export function createProjectPipelineView(project = {}, { selectedStageId = '' }
     const blockedCount = bandStages.filter((stage) => stage.status === 'blocked').length;
     const completeCount = bandStages.filter((stage) => stage.status === 'approved').length;
     const visibleStages = [...bandStages, ...bandLoops.filter((stage) => stage.status !== 'queued')];
+    const requiredArtifacts = uniqueList(bandStages.flatMap((stage) => stage.requiredArtifacts || []));
+    const humanGates = bandStages.map((stage) => stage.humanGate).filter(Boolean);
 
     return {
       ...band,
       stages: bandStages,
       visibleStages,
+      artifactCount: requiredArtifacts.length,
       blockedCount,
       completeCount,
       currentCount,
+      humanGateCount: humanGates.length,
+      humanGates,
+      nextAction: '先补齐当前业务带的必要产物，再推动下一阶段流转。',
+      requiredArtifacts,
       status: blockedCount ? 'blocked' : currentCount ? 'active' : completeCount === bandStages.length ? 'approved' : 'queued',
     };
   });
@@ -310,4 +317,8 @@ function resolvePipelineStatus(workflowStageIds, workflowStages, activeWorkflowS
 
 function normalizeList(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function uniqueList(values) {
+  return [...new Set(normalizeList(values))];
 }

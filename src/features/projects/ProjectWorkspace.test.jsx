@@ -129,6 +129,10 @@ describe('ProjectWorkspace', () => {
     expect(within(bandSummary).getByText('UI / 交互设计')).toBeInTheDocument();
     expect(within(bandSummary).getByText('ERD / 技术设计')).toBeInTheDocument();
     expect(within(bandSummary).getByText('运维需求')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('必要产物 11')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('人工闸口 3')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('页面流程')).toBeInTheDocument();
+    expect(within(bandSummary).getByText('运行环境')).toBeInTheDocument();
     expect(
       within(bandSummary).getByText('先补齐当前业务带的必要产物，再推动下一阶段流转。'),
     ).toBeInTheDocument();

@@ -58,6 +58,23 @@ describe('business pipeline metadata', () => {
     ]);
   });
 
+  test('aggregates required artifacts and human gates for each business band', () => {
+    const view = createProjectPipelineView({
+      currentStageId: 'architecture',
+      stages: createWorkflowStages('architecture'),
+    });
+
+    const designBand = view.bands.find((band) => band.id === 'design');
+    expect(designBand).toMatchObject({
+      artifactCount: 11,
+      humanGateCount: 3,
+      nextAction: '先补齐当前业务带的必要产物，再推动下一阶段流转。',
+    });
+    expect(designBand.requiredArtifacts).toEqual(
+      expect.arrayContaining(['页面流程', 'ERD', '运行环境']),
+    );
+  });
+
   test('covers every current workflow stage without replacing the workflow engine', () => {
     const coveredWorkflowStageIds = new Set(
       [...PIPELINE_STAGE_DEFINITIONS, ...PIPELINE_CONDITIONAL_LOOPS].flatMap(
